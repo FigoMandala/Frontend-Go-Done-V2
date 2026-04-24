@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
-import { FaBell } from "react-icons/fa";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FiBell, FiAlertCircle, FiClock, FiCalendar } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import logoGoDone from '../assets/GoDone Logo.png';
 import backend from "../api/backend";
 
-function Topbar() {
+const NOTIFICATION_FETCH_COOLDOWN_MS = 30 * 1000;
+
+function Topbar({ theme = "light" }) {
   const [dateTime, setDateTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const lastFetchedAtRef = useRef(0);
+  const inFlightRequestRef = useRef(null);
+  const isDark = theme === "dark";
   
-  // Read notification preference from localStorage
   const [notifOn] = useState(() => {
     const saved = localStorage.getItem("notifEnabled");
     return saved === null ? true : JSON.parse(saved);
@@ -17,167 +21,168 @@ function Topbar() {
   
   const navigate = useNavigate();
 
-  // Fungsi untuk fetch tasks (digunakan berkali-kali)
-  const fetchTasks = async () => {
-    // Don't fetch if notifications are disabled
+  const fetchTasks = useCallback(async (force = false) => {
     if (!notifOn) {
       setTasks([]);
       return;
     }
-    
-    try {
-      const response = await backend.get("/tasks");
 
-      const processedTasks = response.data
-        .filter(t => t.status === 'pending')
-        .map(t => ({
-          ...t,
-          deadline: t.deadline ? t.deadline.split(" ")[0].split("T")[0] : null
-        }));
-
-      setTasks(processedTasks);
-
-    } catch (error) {
-      console.error("Gagal mengambil notifikasi tasks:", error);
+    if (!force && Date.now() - lastFetchedAtRef.current < NOTIFICATION_FETCH_COOLDOWN_MS) {
+      return;
     }
-  };
 
-  // 1. Update Jam Realtime
-  useEffect(() => {
-     const timer = setInterval(() => {
-       setDateTime(new Date());
-     }, 1000); 
-     return () => clearInterval(timer);
-  }, []);
+    if (inFlightRequestRef.current) {
+      return inFlightRequestRef.current;
+    }
 
-  // 2. Fetch Data Tasks - Initial + Polling + Event Listener
-  useEffect(() => {
-    fetchTasks();
-
-    const interval = setInterval(() => {
-      fetchTasks();
-    }, 5000); 
-
-    const handleTaskUpdate = () => {
-      fetchTasks();
-    };
-
-    window.addEventListener('taskUpdated', handleTaskUpdate);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('taskUpdated', handleTaskUpdate);
-    };
+    try {
+      inFlightRequestRef.current = backend.get("/tasks");
+      const response = await inFlightRequestRef.current;
+      const processedTasks = response.data
+        .filter((t) => t.status === "pending")
+        .map((t) => ({
+          ...t,
+          deadline: t.deadline ? t.deadline.split(" ")[0].split("T")[0] : null,
+        }));
+      setTasks(processedTasks);
+      lastFetchedAtRef.current = Date.now();
+    } catch (error) {
+      console.error("Failed to fetch notification tasks:", error);
+    } finally {
+      inFlightRequestRef.current = null;
+    }
   }, [notifOn]);
 
   useEffect(() => {
-    if (showNotifications) {
-      fetchTasks();
-    }
-  }, [showNotifications]);
+     const timer = setInterval(() => setDateTime(new Date()), 1000); 
+     return () => clearInterval(timer);
+  }, []);
 
-  const getDaysLeft = (deadline) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTasks(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [fetchTasks]);
+
+  useEffect(() => {
+    if (showNotifications) fetchTasks(true);
+  }, [showNotifications, fetchTasks]);
+
+  const getDaysLeftHtml = (deadline) => {
     if (!deadline) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due = new Date(deadline); due.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const due = new Date(deadline);
-    due.setHours(0, 0, 0, 0);
-
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return <span className="text-red-500 font-bold">Overdue</span>;
-    if (diffDays === 0) return <span className="text-blue-500 font-bold">Today</span>;
-    if (diffDays === 1) return <span className="text-orange-500 font-bold">Tomorrow</span>;
-    
-    return <span className="text-gray-600">{diffDays} Days left</span>;
-  };
-
-  const formatTaskDetail = (dateString, priority) => {
-    if (!dateString) return "";
-    
-    const date = new Date(dateString);
-    const dayName = date.toLocaleDateString("en-GB", { weekday: 'long' });
-    const dateFormatted = date.toLocaleDateString("en-GB"); 
-    const capitalizedPriority = priority ? priority.charAt(0).toUpperCase() + priority.slice(1) : "Normal";
-
-    return `${dayName}, ${dateFormatted} • ${capitalizedPriority} Priority`;
+    if (diffDays < 0) return <span className="text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">Overdue</span>;
+    if (diffDays === 0) return <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Today</span>;
+    if (diffDays === 1) return <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">Tomorrow</span>;
+    return <span className="text-zinc-400 px-2.5 py-1 bg-zinc-800/50 rounded-md border border-zinc-700/50">{diffDays} Days left</span>;
   };
 
   const getPriorityColor = (priority) => {
     const p = priority ? priority.toLowerCase() : "";
-    if (p === 'high') return 'text-red-500';
-    if (p === 'medium') return 'text-yellow-500';
-    return 'text-green-500';
+    if (p === 'high') return 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]';
+    if (p === 'medium') return 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]';
+    return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]';
   };
-
-  const handleViewAllClick = () => {
-    navigate("/my-task");
-    setShowNotifications(false);
-  };
-
-  // --- UI RENDER ---
-
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const currentDayName = days[dateTime.getDay()];
-  const currentFormattedDate = dateTime.toLocaleDateString("en-GB"); 
-  const currentFormattedTime = dateTime.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
 
   return (
-    <header className="relative flex justify-between items-center px-8 py-4 bg-white shadow-sm z-50">
+    <header className="flex justify-between items-center px-4 py-4 md:px-8 bg-transparent z-50 animate-slide-up">
       
-      <img src={logoGoDone} alt="GoDone Logo" className="h-7 w-auto"/>
+      {/* LOGO Area */}
+      <div className="flex items-center gap-3">
+        <div
+          className={`p-2 rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 ${
+            isDark
+              ? "bg-zinc-900/75 border-zinc-700/70 shadow-black/35"
+              : "bg-white/90 border-slate-200/80 shadow-slate-200/40"
+          }`}
+        >
+           <img
+             src={logoGoDone}
+             alt="GoDone"
+             className={`h-5 w-auto transition-all duration-300 ${isDark ? "opacity-90 brightness-110 saturate-[0.85]" : "opacity-100"}`}
+           />
+        </div>
+        <span className={`font-black tracking-widest uppercase text-xs hidden sm:block ${isDark ? "text-zinc-300 opacity-80" : "text-slate-700 opacity-70"}`}>Workspace</span>
+      </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 md:gap-6">
         
+        {/* TIME WIDGET */}
+          <div className={`hidden sm:flex items-center gap-3 px-4 py-2 backdrop-blur-xl border rounded-2xl shadow-inner transition-colors ${isDark ? "bg-zinc-900/50 border-white/5" : "bg-white/70 border-white/80"}`}>
+            <FiCalendar className={`w-4 h-4 ${isDark ? "text-zinc-500" : "text-slate-500"}`} />
+            <span className={`text-xs font-medium tracking-wide uppercase ${isDark ? "text-zinc-300" : "text-slate-700"}`}>{days[dateTime.getDay()]}</span>
+            <div className={`w-px h-3 ${isDark ? "bg-zinc-700" : "bg-slate-300"}`}></div>
+            <FiClock className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-[#21569A]"}`} />
+            <span className={`text-sm font-bold tracking-widest tabular-nums ${isDark ? "text-white" : "text-slate-800"}`}>
+              {dateTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
+           </span>
+        </div>
+
         {/* NOTIFICATION BELL */}
         <div className="relative">
-          <div 
-            className="relative p-3 bg-[#21569A] text-white rounded-lg cursor-pointer shadow-lg hover:bg-[#1a457e] transition"
+          <button 
+            className={`group relative p-3 backdrop-blur-xl border rounded-2xl cursor-pointer shadow-lg transition-all ${
+              isDark
+                ? "bg-zinc-900/50 border-white/5 hover:shadow-indigo-500/10 hover:border-indigo-500/30 text-zinc-400 hover:text-indigo-400"
+                : "bg-white/80 border-white hover:border-[#21569A]/30 text-slate-500 hover:text-[#21569A]"
+            }`}
             onClick={() => setShowNotifications(!showNotifications)}
           >
-            <FaBell />
+            <FiBell className="w-5 h-5 group-hover:animate-bounce" />
             {tasks.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
-                {tasks.length}
-              </span>
+              <>
+                 <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full animate-ping opacity-75"></span>
+                 <span className="absolute top-0 right-0 bg-rose-500 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(244,63,94,0.5)]">
+                   {tasks.length > 9 ? '9+' : tasks.length}
+                 </span>
+              </>
             )}
-          </div>
+          </button>
 
-          {/* POPUP DROPDOWN */}
+          {/* NOTIFICATION WINDOW */}
           {showNotifications && (
-            <div className="absolute right-0 top-14 w-[400px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[100]">
+            <div className={`absolute right-0 top-16 w-[380px] backdrop-blur-3xl rounded-3xl shadow-2xl border overflow-hidden z-[100] transform transition-all animate-slide-up origin-top-right ${
+              isDark
+                ? "bg-zinc-900/90 border-white/10 shadow-black/50"
+                : "bg-white/95 border-white/80 shadow-slate-400/20"
+            }`}>
               
-              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
-                <h3 className="font-bold text-lg text-gray-800">Notifications</h3>
+              <div className={`flex justify-between items-center px-6 py-5 border-b ${isDark ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50/70"}`}>
+                <h3 className={`font-bold tracking-wide flex items-center gap-2 ${isDark ? "text-white" : "text-slate-800"}`}>
+                   Inbox <span className="bg-indigo-500 text-xs px-2 py-0.5 rounded-full text-white">{tasks.length}</span>
+                </h3>
               </div>
 
-              <div className="max-h-[300px] overflow-y-auto bg-gray-50">
+              <div className="max-h-[350px] overflow-y-auto no-scrollbar">
                 {tasks.length === 0 ? (
-                  <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
-                    No active tasks
+                  <div className={`px-6 py-12 flex flex-col gap-3 items-center justify-center text-sm ${isDark ? "text-zinc-500" : "text-slate-500"}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${isDark ? "bg-zinc-800 text-zinc-600" : "bg-slate-100 text-slate-400"}`}>
+                      <FiAlertCircle className="w-6 h-6" />
+                    </div>
+                    <span>No active tasks right now.</span>
+                    <span className="text-xs opacity-50">Enjoy your free time.</span>
                   </div>
                 ) : (
-                  <ul>
+                  <ul className={`divide-y ${isDark ? "divide-white/5" : "divide-slate-100"}`}>
                     {tasks.map((task) => (
-                      <li key={task.task_id} className="bg-white px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="font-semibold text-gray-800 truncate pr-4 text-sm">
+                      <li key={task.task_id} className={`relative bg-transparent p-5 transition-colors cursor-pointer group ${isDark ? "hover:bg-white/5" : "hover:bg-slate-50"}`}>
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-500 transition-all duration-500"></div>
+                        <div className="flex justify-between items-start mb-2 gap-4">
+                          <span className={`font-semibold text-sm truncate transition-colors ${isDark ? "text-zinc-200 group-hover:text-indigo-300" : "text-slate-700 group-hover:text-[#21569A]"}`}>
                             {task.title}
                           </span>
-                          <span className="text-xs whitespace-nowrap bg-gray-100 px-2 py-1 rounded">
-                            {getDaysLeft(task.deadline)}
+                          <span className="text-[10px] shrink-0 tracking-wider">
+                            {getDaysLeftHtml(task.deadline)}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-400 flex items-center gap-1">
-                          {formatTaskDetail(task.deadline, task.priority)}
-                          <span className={`text-[10px] ml-1 ${getPriorityColor(task.priority)}`}>●</span>
+                        <div className={`flex items-center gap-2.5 group-hover:opacity-100 transition-opacity ${isDark ? "opacity-60" : "opacity-80"}`}>
+                           <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
+                           <span className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? "text-zinc-400" : "text-slate-500"}`}>{task.priority || "Normal"}</span>
                         </div>
                       </li>
                     ))}
@@ -185,28 +190,27 @@ function Topbar() {
                 )}
               </div>
 
-              {/* FOOTER */}
-              <div className="border-t border-gray-100 py-3 text-center bg-white">
+              <div className={`border-t p-4 ${isDark ? "border-white/5 bg-zinc-950/50" : "border-slate-100 bg-white"}`}>
                 <button 
-                  onClick={handleViewAllClick} 
-                  className="text-[#21569A] font-semibold text-sm hover:underline"
+                  onClick={() => { navigate("/my-task"); setShowNotifications(false); }} 
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all border ${
+                    isDark
+                      ? "bg-white/5 hover:bg-white/10 text-white border-transparent hover:border-white/10"
+                      : "bg-[#21569A] text-white border-[#21569A] hover:bg-[#1B4B59]"
+                  }`}
                 >
-                  View all tasks
+                  View Activity
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* CLOCK SECTION */}
-        <div className="flex flex-col text-sm text-right leading-tight">
-          <span className="font-semibold">{currentDayName}</span>
-          <span className="opacity-70">{currentFormattedDate}</span>
-          <span className="opacity-50 text-xs">{currentFormattedTime}</span>
-        </div>
       </div>
     </header>
   );
 }
+
+const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default Topbar;

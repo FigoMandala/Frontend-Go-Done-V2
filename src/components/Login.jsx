@@ -1,6 +1,5 @@
 import { useState } from "react";
 import backend from "../api/backend";
-import wallpaper from "../assets/wallpaper.png";
 import illustration from "../assets/illustration.svg";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
@@ -12,7 +11,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // --- 2. HANDLER FUNCTIONS (Harus di dalam function) ---
+  // --- HANDLER FUNCTIONS ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -20,6 +19,7 @@ function Login() {
 
     if (!emailOrUsername) return toast.error("Email atau Username tidak boleh kosong!");
     if (!password) return toast.error("Password tidak boleh kosong!");
+    if (password.length < 6) return toast.error("Password minimal 6 karakter!");
 
     try {
       console.log("🔄 Testing connection to backend...");
@@ -60,71 +60,85 @@ function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-[#21596A] bg-cover bg-center relative"
-      style={{ backgroundImage: `url(${wallpaper})` }}
-    >
-      <div className="absolute inset-0 bg-[#21569A]/60"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#eff6ff] via-[#f8fafc] to-[#e0f2fe] relative overflow-hidden font-sans">
+      {/* Soft Ambient Blobs Background */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[70%] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-cyan-300/30 blur-[130px] pointer-events-none"></div>
+
       <Toaster position="top-center" />
 
-      <div className="relative z-10 bg-white rounded-2xl shadow-2xl flex flex-col lg:flex-row items-center justify-between w-[90%] max-w-[1300px] min-h-[650px] lg:min-h-[700px] overflow-hidden">
+      <div className="relative z-10 bg-white/60 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white/80 flex flex-col lg:flex-row items-stretch justify-between w-[90%] max-w-[1100px] min-h-[600px] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.08)]">
         
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="w-full lg:w-1/2 flex flex-col justify-center px-10 lg:px-16 py-12">
-          <div className="flex flex-col mb-8 -mt-24">
-            <h1 className="text-[46px] font-semibold text-gray-800">Sign In</h1>
+        {/* FORM SECTION */}
+        <form onSubmit={handleSubmit} className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-14 py-12 z-10 bg-white/40">
+          <div className="flex flex-col mb-10">
+            <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-800 tracking-tight mb-2">
+              Sign In
+            </h1>
+            <p className="text-slate-500 font-medium">Hello there! Please enter your details.</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Email or Username */}
-            <div className="flex items-center border border-gray-400 rounded-md px-4 py-3">
-              <FaUser className="text-gray-500 mr-3" />
+            <div className="group flex items-center border border-slate-200/80 bg-white/80 rounded-2xl px-4 py-4 focus-within:border-[#21569A] focus-within:ring-4 focus-within:ring-[#21569A]/10 transition-all duration-300 shadow-sm">
+              <FaUser className="text-slate-400 group-focus-within:text-[#21569A] mr-3.5 transition-colors text-lg" />
               <input
                 type="text"
                 placeholder="Email atau Username"
-                className="flex-1 outline-none text-gray-700"
+                className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full"
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
               />
             </div>
 
             {/* Password */}
-            <div className="flex items-center border border-gray-400 rounded-md px-4 py-3">
-              <FaLock className="text-gray-500 mr-3" />
+            <div className="group flex items-center border border-slate-200/80 bg-white/80 rounded-2xl px-4 py-4 focus-within:border-[#21569A] focus-within:ring-4 focus-within:ring-[#21569A]/10 transition-all duration-300 shadow-sm">
+              <FaLock className="text-slate-400 group-focus-within:text-[#21569A] mr-3.5 transition-colors text-lg" />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
-                className="flex-1 outline-none text-gray-700"
+                className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
               >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+              </button>
+            </div>
+            <div className="flex justify-end mt-1">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-xs font-bold text-[#21569A] hover:text-blue-700 hover:underline transition-all"
+              >
+                Lupa Password?
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col mt-4">
-            <button type="submit" className="bg-[#21569A] text-white px-6 py-2 rounded-md font-semibold hover:bg-[#1B4B59] w-32 transition-all">
-              Submit
+          <div className="flex flex-col mt-10">
+            <button type="submit" className="bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full">
+              Sign In
             </button>
 
-            <p className="mt-4">
+            <p className="mt-8 text-center text-slate-500 font-medium text-sm">
               Belum punya akun?{" "}
-              <Link to="/register" className="text-blue-600 hover:underline">
+              <Link to="/register" className="text-[#21569A] font-bold hover:text-[#163a68] hover:underline transition-colors">
                 Register
               </Link>
             </p>
           </div>
         </form>
 
-        {/* Illustration */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-          <img src={illustration} alt="Login Illustration" className="w-[80%] max-w-[700px] object-contain" />
+        {/* ILLUSTRATION SECTION */}
+        <div className="w-full lg:w-[55%] hidden lg:flex items-center justify-center p-12 relative">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img src={illustration} alt="Login Illustration" className="w-[85%] max-w-[500px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-700 relative z-10" />
+          </div>
         </div>
       </div>
     </div>

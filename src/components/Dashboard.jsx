@@ -1,14 +1,17 @@
-import { useEffect, useState, useMemo } from "react";
-import { FiEdit2, FiTrash2, FiClock, FiCalendar, FiCheckCircle, FiAlertTriangle, FiCheck } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  FiCalendar,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiCheck,
+  FiArrowRight,
+  FiActivity,
+  FiTrash2,
+  FiTarget,
+} from "react-icons/fi";
 import backend from "../api/backend";
 import EditTaskForm from "./EditTaskForm";
-
-const sanitizeOutput = (text) => {
-  if (!text) return "";
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
-};
 
 function Dashboard() {
   const [user, setUser] = useState({});
@@ -16,565 +19,613 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
-  
-  // Edit Modal States
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  
-  // Delete Popup States
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState(null);
-  
-  // Success/Error Popup States
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [completeTaskId, setCompleteTaskId] = useState(null);
 
-  // Fetch user data
+  const [completedTodayCount, setCompletedTodayCount] = useState(0);
+  const [theme, setTheme] = useState(localStorage.getItem("dashboardTheme") || "light");
+
+  const isDark = theme === "dark";
+
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!token) return;
 
-    if (!token) {
-      console.log("Token tidak ditemukan!");
-      return;
+    const cachedUserRaw = localStorage.getItem("user");
+    if (cachedUserRaw) {
+      try {
+        setUser(JSON.parse(cachedUserRaw));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
 
     backend
       .get("/user/me")
       .then((res) => {
         setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
       })
-      .catch((err) => {
-        console.log("Error GET /me:", err);
-      });
+      .catch(console.error);
   }, []);
 
-  // Fetch tasks and categories
+  // Listen for user data updates from Account page
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      if (event.detail) setUser(event.detail);
+    };
+    window.addEventListener('userDataUpdated', handleUserUpdate);
+    return () => window.removeEventListener('userDataUpdated', handleUserUpdate);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [tasksRes, catsRes] = await Promise.all([
-          backend.get("/tasks"),
-          backend.get("/categories")
-        ]);
+        const [tasksRes, catsRes] = await Promise.all([backend.get("/tasks"), backend.get("/categories")]);
 
-        const parsed = tasksRes.data.map((t) => {
-          const deadline = (t.deadline || "").trim();
-          
-          return {
-            id: t.task_id,
-            category: t.category_name,
-            categoryId: t.category_id,
-            title: t.title,
-            description: t.description,
-            deadline: deadline,
-            priority: t.priority?.toLowerCase(),
-            status: (t.status || "pending").toLowerCase() === "done" ? "Done" : (t.status || "pending"),
-          };
-        });
-
-        const catOpts = catsRes.data.map((c) => ({
-          value: c.category_id,
-          label: c.category_name,
+        const parsed = tasksRes.data.map((t) => ({
+          id: t.task_id,
+          category: t.category_name || "Uncategorized",
+          categoryId: t.category_id,
+          title: t.title,
+          description: t.description,
+          deadline: (t.deadline || "").trim(),
+          priority: t.priority?.toLowerCase(),
+          status:
+            (t.status || "pending").toLowerCase() === "done" ||
+            (t.status || "").toLowerCase() === "completed"
+              ? "Done"
+              : "Pending",
         }));
 
         setTasks(parsed);
-        setCategories(catOpts);
+        setCategories(catsRes.data.map((c) => ({ value: c.category_id, label: c.category_name })));
+        setCompletedTodayCount(0);
       } catch (e) {
-        console.error("Error fetching data:", e);
+        console.error("Error fetching", e);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   useEffect(() => {
-    const now = new Date();
-    const hour = now.getHours();
+    const handleThemeChange = (event) => {
+      if (event.detail === "light" || event.detail === "dark") {
+        setTheme(event.detail);
+      }
+    };
 
-    if (hour >= 4 && hour < 11) {
-      setGreeting("Good Morning");
-    } else if (hour >= 11 && hour < 15) {
-      setGreeting("Good Afternoon");
-    } else if (hour >= 15 && hour < 19) {
-      setGreeting("Good Evening");
-    } else {
-      setGreeting("Good Night");
-    }
+    window.addEventListener("dashboardThemeChange", handleThemeChange);
+    return () => window.removeEventListener("dashboardThemeChange", handleThemeChange);
   }, []);
 
-  // Helper functions
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case "high":
-        return "bg-red-50 border-red-500 text-red-600";
-      case "medium":
-        return "bg-yellow-50 border-yellow-500 text-yellow-600";
-      case "low":
-        return "bg-green-50 border-green-500 text-green-600";
-      default:
-        return "bg-blue-50 border-blue-500 text-blue-600";
-    }
-  };
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 11) setGreeting("Good Morning");
+    else if (hour >= 11 && hour < 15) setGreeting("Good Afternoon");
+    else if (hour >= 15 && hour < 19) setGreeting("Good Evening");
+    else setGreeting("Good Night");
+  }, []);
 
   const getDaysUntilDeadline = (deadline) => {
     if (!deadline) return null;
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    // Parse deadline as YYYY-MM-DD without timezone conversion
     const [year, month, day] = deadline.split("-").map(Number);
-    const deadlineDate = new Date(year, month - 1, day, 0, 0, 0, 0);
-    
-    const diffTime = deadlineDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
+    const diffTime = new Date(year, month - 1, day) - today;
+    return Math.ceil(diffTime / (1000 * 3600 * 24));
   };
 
   const formatDeadlineText = (deadline) => {
     const days = getDaysUntilDeadline(deadline);
-    
     if (days === null) return "No deadline";
     if (days < 0) return "Overdue";
     if (days === 0) return "Today";
     if (days === 1) return "Tomorrow";
     if (days <= 7) return `${days} days left`;
-    
-    // Parse deadline as YYYY-MM-DD without timezone conversion
     const [year, month, day] = deadline.split("-").map(Number);
-    const deadlineDate = new Date(year, month - 1, day, 0, 0, 0, 0);
-    
-    return deadlineDate.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const getOverdueText = (deadline) => {
-    const days = getDaysUntilDeadline(deadline);
-    
-    if (days === null || days >= 0) return "";
-    
-    const overdueDays = Math.abs(days);
-    if (overdueDays === 1) return "1 day overdue";
-    return `${overdueDays} days overdue`;
-  };
+  const todayTasks = tasks.filter((t) => getDaysUntilDeadline(t.deadline) === 0 && t.status !== "Done");
 
-  const normalizeDate = (str) => {
-    if (!str) return "";
-    if (str.includes("T")) return str.split("T")[0];
-    return str;
-  };
-
-  // Filter tasks
   const upcomingTasks = tasks
     .filter((t) => {
-      const days = getDaysUntilDeadline(t.deadline);
-      const normalizedStatus = (t.status || "").toLowerCase();
-      return days !== null && days >= 0 && days <= 7 && normalizedStatus !== 'done' && normalizedStatus !== 'completed';
+      const d = getDaysUntilDeadline(t.deadline);
+      return d !== null && d >= 0 && d <= 7 && t.status !== "Done";
     })
-    .sort((a, b) => {
-      const daysA = getDaysUntilDeadline(a.deadline);
-      const daysB = getDaysUntilDeadline(b.deadline);
-      return daysA - daysB;
-    })
+    .sort((a, b) => getDaysUntilDeadline(a.deadline) - getDaysUntilDeadline(b.deadline))
     .slice(0, 5);
 
-  const todayTasks = tasks.filter((t) => {
-    const days = getDaysUntilDeadline(t.deadline);
-    const normalizedStatus = (t.status || "").toLowerCase();
-    return days === 0 && normalizedStatus !== 'done' && normalizedStatus !== 'completed';
-  });
-
-  // Overdue tasks - only incomplete tasks that are past deadline
   const overdueTasks = tasks
     .filter((t) => {
-      const days = getDaysUntilDeadline(t.deadline);
-      const normalizedStatus = (t.status || "").toLowerCase();
-      return days !== null && days < 0 && normalizedStatus !== 'done' && normalizedStatus !== 'completed';
+      const d = getDaysUntilDeadline(t.deadline);
+      return d !== null && d < 0 && t.status !== "Done";
     })
-    .sort((a, b) => {
-      const daysA = getDaysUntilDeadline(a.deadline);
-      const daysB = getDaysUntilDeadline(b.deadline);
-      return daysA - daysB; // Most overdue first
-    })
-    .slice(0, 5);
+    .sort((a, b) => getDaysUntilDeadline(a.deadline) - getDaysUntilDeadline(b.deadline))
+    .slice(0, 4);
 
-  const priorityCounts = {
-    high: tasks.filter((t) => t.priority === "high").length,
-    medium: tasks.filter((t) => t.priority === "medium").length,
-    low: tasks.filter((t) => t.priority === "low").length,
+  const stats = {
+    high: tasks.filter((t) => t.priority === "high" && t.status !== "Done").length,
+    medium: tasks.filter((t) => t.priority === "medium" && t.status !== "Done").length,
+    low: tasks.filter((t) => t.priority === "low" && t.status !== "Done").length,
   };
 
-  // CRUD Handlers (dari MyTask.jsx)
-  
-  // Handle Edit Task
-  const handleEditTask = (task) => {
-    setEditingTask({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      deadline: normalizeDate(task.deadline),
-      priority: task.priority,
-      categoryId: task.categoryId
-    });
-    setShowEditModal(true);
+  const computeProgress = () => {
+    const initialToday = todayTasks.length + completedTodayCount;
+    if (initialToday === 0) return 100;
+    return Math.round((completedTodayCount / initialToday) * 100);
   };
 
-  // Handle Update Task
-  const handleUpdateTask = async (formData) => {
+  const requestFinishTask = (taskId) => {
+    setCompleteTaskId(taskId);
+    setShowCompleteConfirm(true);
+  };
+
+  const handleFinishTask = async () => {
+    const taskId = completeTaskId;
+    setShowCompleteConfirm(false);
+    setCompleteTaskId(null);
     try {
-      await backend.put(`/tasks/${editingTask.id}`, formData);
-
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === editingTask.id
-            ? {
-                ...t,
-                title: formData.title,
-                description: formData.description,
-                priority: formData.priority.toLowerCase(),
-                deadline: formData.deadline,
-                categoryId: formData.category_id,
-                status: formData.status,
-              }
-            : t
-        )
-      );
-
-      setShowEditModal(false);
-      setEditingTask(null);
-      setPopupMessage("Task updated successfully!");
+      await backend.put(`/tasks/${taskId}`, { status: "completed" });
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
+      setCompletedTodayCount((c) => c + 1);
+      setPopupMessage("Task marked as completed.");
       setShowSuccessPopup(true);
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || "Failed to update task");
+    } catch {
+      setErrorMessage("Failed to complete task.");
       setShowErrorPopup(true);
     }
   };
 
-  // Handle Delete Click
-  const handleDeleteClick = (taskId) => {
-    setDeleteTaskId(taskId);
-    setShowDeletePopup(true);
-  };
-
-  // Handle Delete Confirm
   const handleDeleteConfirm = async () => {
     try {
       await backend.delete(`/tasks/${deleteTaskId}`);
-      
       setTasks((prev) => prev.filter((t) => t.id !== deleteTaskId));
-      
       setShowDeletePopup(false);
       setDeleteTaskId(null);
-      setPopupMessage("Task deleted successfully!");
-      setShowSuccessPopup(true);
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || "Failed to delete task");
+    } catch {
+      setErrorMessage("Failed to delete task.");
       setShowErrorPopup(true);
     }
   };
 
-  // Handle Complete Task
-  const handleFinishTask = async (taskId) => {
-    try {
-      await backend.put(`/tasks/${taskId}`, {
-        status: "completed",
-      });
+  const panelClass = isDark
+    ? "bg-zinc-900/40 border-zinc-800/80 shadow-md shadow-black/10"
+    : "bg-white/90 border-slate-200/60 shadow-sm shadow-slate-200/50";
+  const headingClass = isDark ? "text-zinc-50" : "text-slate-900";
+  const subtleTextClass = isDark ? "text-zinc-400" : "text-slate-500";
 
-      // Update task status in local state - use "Done" to match database
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === taskId ? { ...t, status: "Done" } : t
-        )
-      );
-
-      setPopupMessage("Task marked as completed!");
-      setShowSuccessPopup(true);
-    } catch (error) {
-      setErrorMessage(error.response?.data?.error || "Failed to complete task");
-      setShowErrorPopup(true);
-    }
+  const priorityBadgeClass = (priority) => {
+    if (priority === "high") return isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-200";
+    if (priority === "medium") return isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-600 border-amber-200";
+    if (priority === "low") return isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200";
+    return isDark ? "bg-zinc-800/50 text-zinc-300 border-zinc-700/50" : "bg-slate-50 text-slate-600 border-slate-200";
   };
 
   return (
-    <>
-      <div className="flex flex-col gap-6">
-        {/* GREETING */}
-        <div className="pl-6 pt-6">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            {greeting}, {user?.first_name}! 👋
-          </h1>
-          <p className="text-gray-600 mt-1">Here's what's happening with your tasks today</p>
+    <div className="min-h-full pb-10">
+      <div className="max-w-[1400px] mx-auto space-y-6 animate-slide-up">
+        {/* HERO WIDGET */}
+        <div className={`rounded-3xl border p-5 md:p-7 backdrop-blur-xl relative overflow-hidden ${panelClass}`}>
+          <div
+            className={`absolute -top-32 -right-16 w-80 h-80 rounded-full blur-[80px] pointer-events-none ${
+              isDark ? "bg-indigo-500/20" : "bg-blue-400/10"
+            }`}
+          ></div>
+          <div className="relative z-10 grid grid-cols-1 xl:grid-cols-12 items-center gap-6 xl:gap-8">
+            <div className="xl:col-span-8 max-w-[650px]">
+              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>
+                Productivity Hub
+              </p>
+              <h1 className={`text-3xl md:text-4xl font-extrabold mt-2 leading-tight tracking-tight ${headingClass}`}>
+                {greeting}, {user?.first_name || "User"}
+              </h1>
+              <p className={`mt-2.5 max-w-lg text-sm md:text-[15px] font-medium leading-relaxed ${subtleTextClass}`}>
+                Keep your day on track with your personal command center.
+              </p>
+            </div>
+
+            <div className="xl:col-span-4 flex xl:justify-end mt-4 xl:mt-0">
+              <div
+                className={`inline-flex items-center gap-4 px-5 py-4 rounded-2xl border w-fit min-w-[220px] animate-slide-up shadow-sm ${
+                  isDark ? "bg-zinc-900/60 border-zinc-800/80" : "bg-white border-slate-200/80"
+                }`}
+                style={{ animationDelay: "120ms" }}
+              >
+                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className={isDark ? "text-zinc-800" : "text-slate-100"}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                    />
+                    <path
+                      className={isDark ? "text-indigo-500" : "text-[#21569A]"}
+                      strokeDasharray={`${computeProgress()}, 100`}
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 1s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                    />
+                  </svg>
+                  <span className={`absolute text-xs font-bold ${headingClass}`}>
+                    {computeProgress()}%
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-[11px] font-bold uppercase tracking-widest ${subtleTextClass}`}>
+                    Daily Goal
+                  </p>
+                  <p className={`text-sm font-semibold mt-0.5 ${headingClass}`}>
+                    {completedTodayCount} tasks sorted
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* CONTENT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* TODAY'S TASKS */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <FiCalendar className="w-5 h-5 text-gray-700" />
-              <h2 className="font-bold text-xl">Today's Tasks</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center text-gray-500 py-8">Loading...</div>
-              ) : todayTasks.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <p>No tasks due today</p>
-                  <p className="text-sm mt-1">Enjoy your day! ☀️</p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(180px,auto)]">
+          {/* FOCUS AREA */}
+          <section
+            className={`md:col-span-8 rounded-3xl border p-6 md:p-7 backdrop-blur-xl ${panelClass} animate-slide-up flex flex-col`}
+            style={{ animationDelay: "120ms" }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-indigo-500/10 text-indigo-400" : "bg-blue-50 text-blue-600"}`}>
+                  <FiTarget className="w-5 h-5" />
                 </div>
-              ) : (
-                todayTasks.map((task) => (
-                  <div
+                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Focus Area</h2>
+              </div>
+              <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold border ${isDark ? "border-indigo-500/20 text-indigo-300 bg-indigo-500/10" : "border-slate-200 text-slate-500 bg-slate-50"}`}>
+                {todayTasks.length} Active
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="animate-pulse space-y-4">
+                <div className={`h-16 rounded-2xl ${isDark ? "bg-zinc-800/50" : "bg-slate-100"}`}></div>
+                <div className={`h-16 rounded-2xl w-4/5 ${isDark ? "bg-zinc-800/50" : "bg-slate-100"}`}></div>
+              </div>
+            ) : todayTasks.length === 0 ? (
+              <div className={`flex-1 rounded-2xl border border-dashed flex flex-col items-center justify-center p-8 text-center ${isDark ? "border-zinc-700 bg-zinc-900/30" : "border-slate-200 bg-slate-50/50"}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
+                   <FiCheckCircle className="w-6 h-6 text-emerald-500" />
+                </div>
+                <h3 className={`text-[1rem] font-semibold ${headingClass}`}>Semua task hari ini beres</h3>
+                <p className={`mt-1 text-sm ${subtleTextClass}`}>Lanjut santai atau ke rencana berikutnya.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {todayTasks.map((task, idx) => (
+                  <article
                     key={task.id}
-                    className="flex justify-between items-center p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500"
+                    className={`group rounded-2xl border p-4 flex items-center gap-3 transition-all duration-300 hover:shadow-md ${
+                      isDark ? "bg-zinc-900 border-zinc-800 hover:border-indigo-500/50" : "bg-white border-slate-200/80 hover:border-blue-400/30"
+                    } animate-slide-up`}
+                    style={{ animationDelay: `${200 + idx * 50}ms` }}
                   >
+                    <button
+                      onClick={() => requestFinishTask(task.id)}
+                      className={`w-[34px] h-[34px] rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                        isDark
+                          ? "border-zinc-700 hover:border-emerald-500 hover:bg-emerald-500/10 text-zinc-500 hover:text-emerald-400"
+                          : "border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50 text-slate-300 hover:text-emerald-600"
+                      }`}
+                    >
+                      <FiCheck className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{sanitizeOutput(task.title)}</p>
-                      <p className="text-sm text-gray-600">{sanitizeOutput(task.category)}</p>
+                      <p className={`text-sm font-semibold truncate ${headingClass}`}>{task.title}</p>
+                      <p className={`text-xs mt-0.5 truncate ${subtleTextClass}`}>{task.category}</p>
                     </div>
-                    <span className="ml-3 px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-semibold">
-                      Due Today
+                    <span className={`text-[10px] px-2 py-1 rounded-md border uppercase font-bold tracking-widest shrink-0 ${priorityBadgeClass(task.priority)}`}>
+                      {task.priority || "normal"}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* PRIORITY RADAR */}
+          <section
+            className={`md:col-span-4 rounded-3xl border p-6 md:p-7 backdrop-blur-xl ${panelClass} animate-slide-up flex flex-col`}
+            style={{ animationDelay: "180ms" }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
+                <FiActivity className="w-5 h-5" />
+              </div>
+              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Priority Radar</h2>
+            </div>
+
+            <div className="space-y-3 flex-1 flex flex-col justify-center">
+              {[
+                { label: "High", count: stats.high, dot: "bg-rose-500", ring: "ring-rose-500/20" },
+                { label: "Medium", count: stats.medium, dot: "bg-amber-500", ring: "ring-amber-500/20" },
+                { label: "Low", count: stats.low, dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
+              ].map((item, idx) => (
+                <div
+                  key={item.label}
+                  className={`rounded-2xl p-4 flex items-center justify-between border transition-all animate-slide-up ${
+                    isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-slate-200/70"
+                  }`}
+                  style={{ animationDelay: `${260 + idx * 50}ms` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full ${item.dot} ring-4 ${item.ring} animate-pulse`}></span>
+                    <span className={`text-xs uppercase tracking-widest font-bold ${subtleTextClass}`}>{item.label}</span>
+                  </div>
+                  <span className={`text-xl font-bold ${headingClass}`}>{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* UPCOMING */}
+          <section
+            className={`md:col-span-6 rounded-3xl border p-6 md:p-7 backdrop-blur-xl ${panelClass} animate-slide-up`}
+            style={{ animationDelay: "220ms" }}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
+                  <FiCalendar className="w-5 h-5" />
+                </div>
+                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Upcoming</h2>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {upcomingTasks.length === 0 && !loading && (
+                <p className={`text-sm italic ${subtleTextClass}`}>Tidak ada deadline dalam 7 hari kedepan.</p>
+              )}
+              {upcomingTasks.map((task, idx) => (
+                <article
+                  key={task.id}
+                  className={`group rounded-2xl border p-4 flex items-center gap-4 transition-all animate-slide-up ${
+                    isDark ? "bg-zinc-900 border-zinc-800 hover:border-zinc-700" : "bg-white border-slate-200/70 hover:border-slate-300"
+                  }`}
+                  style={{ animationDelay: `${300 + idx * 50}ms` }}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 ${isDark ? "bg-zinc-800" : "bg-slate-50 border border-slate-100"}`}>
+                    <span className={`text-[9px] uppercase tracking-widest font-bold ${isDark ? "text-indigo-400" : "text-blue-600"}`}>
+                      {task.deadline ? new Date(task.deadline).toLocaleDateString("en-US", { month: "short" }) : "-"}
+                    </span>
+                    <span className={`text-lg font-bold leading-none ${headingClass}`}>
+                      {task.deadline ? new Date(task.deadline).getDate() : "-"}
                     </span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-          
-          {/* UPCOMING DEADLINES */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <FiClock className="w-5 h-5 text-gray-700" />
-              <h2 className="font-bold text-xl">Upcoming Deadlines</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center text-gray-500 py-8">Loading...</div>
-              ) : upcomingTasks.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <FiCheckCircle className="w-12 h-12 mx-auto mb-2 text-green-500" />
-                  <p>All caught up! 🎉</p>
-                </div>
-              ) : (
-                upcomingTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`flex justify-between items-center p-4 border-l-4 rounded-lg ${getPriorityColor(
-                      task.priority
-                    )}`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{sanitizeOutput(task.title)}</p>
-                      <p className="text-sm text-gray-600">
-                        {formatDeadlineText(task.deadline)}
-                      </p>
-                    </div>
-                    <span className="ml-3 px-3 py-1 rounded-full text-xs font-semibold capitalize">
-                      {task.priority}
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${headingClass}`}>{task.title}</p>
+                    <p className={`text-xs mt-0.5 truncate ${subtleTextClass}`}>{formatDeadlineText(task.deadline)}</p>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* OVERDUE TASKS */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="flex items-center gap-2 mb-4">
-              <FiAlertTriangle className="w-5 h-5 text-red-600" />
-              <h2 className="font-bold text-xl text-red-600">Overdue Tasks</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center text-gray-500 py-8">Loading...</div>
-              ) : overdueTasks.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <FiCheckCircle className="w-12 h-12 mx-auto mb-2 text-green-500" />
-                  <p>No overdue tasks! 🎊</p>
-                  <p className="text-sm mt-1">You're on track!</p>
-                </div>
-              ) : (
-                overdueTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-4 bg-red-50 rounded-lg border-l-4 border-red-600 hover:bg-red-100 transition-colors"
+                  <button
+                    onClick={() => {
+                      setEditingTask({ id: task.id, title: task.title, description: task.description, deadline: task.deadline, priority: task.priority, categoryId: task.categoryId });
+                      setShowEditModal(true);
+                    }}
+                    className={`w-9 h-9 opacity-0 group-hover:opacity-100 rounded-full border flex items-center justify-center transition-all ${
+                      isDark ? "border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-white" : "border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                    }`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate text-red-900">{sanitizeOutput(task.title)}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-red-600 font-semibold">
-                          {getOverdueText(task.deadline)}
-                        </p>
-                        <span className="text-xs text-gray-500">•</span>
-                        <span className="text-xs text-gray-600 capitalize">
-                          {task.priority} priority
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      <button 
-                        className="p-2 hover:bg-red-200 rounded-lg transition-colors"
-                        onClick={() => handleEditTask(task)}
-                        title="Edit"
-                      >
-                        <FiEdit2 className="w-4 h-4 text-red-700" />
-                      </button>
-                      <button 
-                        className="p-2 hover:bg-red-200 rounded-lg transition-colors"
-                        onClick={() => handleDeleteClick(task.id)}
-                        title="Delete"
-                      >
-                        <FiTrash2 className="w-4 h-4 text-red-700" />
-                      </button>
-                      <button 
-                        className="p-2 hover:bg-red-200 rounded-lg transition-colors"
-                        onClick={() => handleFinishTask(task.id)}
-                        title="Mark as completed"
-                      >
-                        <FiCheck className="w-4 h-4 text-green-600" />
-                      </button>
-                    </div>
+                    <FiArrowRight className="w-4 h-4" />
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* OVERDUE */}
+          <section
+            className={`md:col-span-6 rounded-3xl border p-6 md:p-7 backdrop-blur-xl ${panelClass} animate-slide-up flex flex-col`}
+            style={{ animationDelay: "260ms" }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-rose-500/10 text-rose-400" : "bg-rose-50 text-rose-600"}`}>
+                <FiAlertTriangle className="w-5 h-5" />
+              </div>
+              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Overdue</h2>
+            </div>
+
+            <div className="space-y-3 flex-1 flex flex-col">
+              {overdueTasks.length === 0 && !loading && (
+                <div className={`flex-1 rounded-2xl border p-6 flex flex-col items-center justify-center text-center ${isDark ? "bg-zinc-900 border-zinc-800" : "bg-white border-slate-200/70"}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${isDark ? "bg-emerald-500/10" : "bg-emerald-50"}`}>
+                     <FiCheck className="w-5 h-5 text-emerald-500" />
                   </div>
-                ))
+                  <p className={`text-sm font-semibold ${headingClass}`}>Semua task aman</p>
+                  <p className={`text-xs mt-1 ${subtleTextClass}`}>Tidak ada yang lewat deadline.</p>
+                </div>
               )}
+
+              {overdueTasks.map((task, idx) => (
+                <article
+                  key={task.id}
+                  className={`group rounded-2xl border p-4 flex items-center gap-4 animate-slide-up transition-colors ${
+                    isDark ? "bg-rose-950/20 border-rose-900/50 hover:border-rose-800" : "bg-rose-50/50 border-rose-100 hover:border-rose-200"
+                  }`}
+                  style={{ animationDelay: `${340 + idx * 50}ms` }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${isDark ? "text-rose-200" : "text-rose-800"}`}>{task.title}</p>
+                    <p className={`text-xs mt-0.5 font-bold uppercase tracking-widest ${isDark ? "text-rose-400" : "text-rose-500"}`}>
+                      {getDaysUntilDeadline(task.deadline) * -1} days late
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => {
+                        setDeleteTaskId(task.id);
+                        setShowDeletePopup(true);
+                      }}
+                      className={`p-2 rounded-xl transition-colors border ${isDark ? "border-transparent text-zinc-400 hover:text-rose-400 hover:border-rose-500/30" : "border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200"}`}
+                    >
+                      <FiTrash2 className="w-[18px] h-[18px]" />
+                    </button>
+                    <button
+                      onClick={() => requestFinishTask(task.id)}
+                      className={`p-2 rounded-xl transition-colors border ${isDark ? "border-transparent text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/30" : "border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200"}`}
+                    >
+                      <FiCheck className="w-[18px] h-[18px]" />
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
-          </div>
-
-                    {/* TASK PRIORITIES */}
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="font-bold text-xl mb-4">Task Priorities</h2>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3 p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-red-500" />
-                  <p className="font-semibold">High Priority</p>
-                </div>
-                <p className="text-red-600 text-lg font-bold">
-                  {priorityCounts.high}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <p className="font-semibold">Medium Priority</p>
-                </div>
-                <p className="text-yellow-600 text-lg font-bold">
-                  {priorityCounts.medium}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-green-500" />
-                  <p className="font-semibold">Low Priority</p>
-                </div>
-                <p className="text-green-600 text-lg font-bold">
-                  {priorityCounts.low}
-                </p>
-              </div>
-            </div>
-          </div>
-
+          </section>
         </div>
       </div>
 
-      {/* EDIT MODAL */}
-      {showEditModal && editingTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl my-8">
+      {showEditModal && editingTask && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/10 animate-slide-up" style={{ animationDuration: "0.25s" }}>
+          <div className="w-full max-w-xl">
             <EditTaskForm
               isOpen={showEditModal}
               isEditMode={true}
               task={editingTask}
               categories={categories}
-              onSave={handleUpdateTask}
+              onSave={async (fw) => {
+                await backend.put(`/tasks/${editingTask.id}`, fw);
+                setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? { ...t, ...fw } : t)));
+                setShowEditModal(false);
+                setEditingTask(null);
+              }}
               onCancel={() => {
                 setShowEditModal(false);
                 setEditingTask(null);
               }}
-              onAddCategory={() => {}}
-              onEditCategory={() => {}}
-              onDeleteCategory={() => {}}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* DELETE POPUP */}
-      {showDeletePopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-            <h2 className="text-xl font-bold mb-4">Delete Task?</h2>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this task?</p>
-            <div className="flex gap-4">
+      {/* Complete Confirmation Popup */}
+      {showCompleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/10">
+          <div className={`rounded-[1.75rem] p-7 max-w-sm w-full shadow-2xl text-center border animate-slide-up ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-slate-200"}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
+              <FiCheckCircle className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Mark as Done?</h3>
+            <p className={`text-sm mb-7 ${subtleTextClass}`}>Task ini akan ditandai sebagai selesai.</p>
+            <div className="flex gap-3">
               <button
-                onClick={handleDeleteConfirm}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold"
-              >
-                Yes, Delete
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeletePopup(false);
-                  setDeleteTaskId(null);
-                }}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold"
+                onClick={() => { setShowCompleteConfirm(false); setCompleteTaskId(null); }}
+                className={`flex-1 py-3 rounded-xl border font-semibold ${
+                  isDark
+                    ? "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10"
+                    : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                }`}
               >
                 Cancel
               </button>
+              <button
+                onClick={handleFinishTask}
+                className={`flex-1 py-3 rounded-xl text-white font-semibold ${isDark ? "bg-emerald-600 hover:bg-emerald-700" : "bg-emerald-500 hover:bg-emerald-600"}`}
+              >
+                Yes, Complete
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* SUCCESS POPUP */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-          <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiCheck className="text-white w-8 h-8" />
+      {showDeletePopup && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/10">
+          <div className={`rounded-[1.75rem] p-7 max-w-sm w-full shadow-2xl text-center border animate-slide-up ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-slate-200"}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-rose-500/10" : "bg-rose-100"}`}>
+              <FiTrash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Success!</h2>
-            <p className="text-gray-600 mb-6">{popupMessage}</p>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Delete Task?</h3>
+            <p className={`text-sm mb-7 ${subtleTextClass}`}>Task akan dihapus permanen dari daftar.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeletePopup(false)}
+                className={`flex-1 py-3 rounded-xl border font-semibold ${
+                  isDark
+                    ? "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10"
+                    : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showSuccessPopup && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/10">
+          <div className={`rounded-[1.75rem] p-7 max-w-sm w-full shadow-2xl text-center border animate-slide-up ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-slate-200"}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
+              <FiCheck className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Task Completed</h3>
+            <p className={`text-sm mb-7 ${subtleTextClass}`}>{popupMessage}</p>
             <button
               onClick={() => setShowSuccessPopup(false)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-2 rounded-lg font-semibold"
+              className={`w-full py-3 rounded-xl font-bold ${
+                isDark ? "bg-white text-black hover:bg-zinc-200" : "bg-[#21569A] text-white hover:bg-[#1B4B59]"
+              }`}
             >
               OK
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ERROR POPUP */}
-      {showErrorPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
-          <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
-            <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
-            <p className="text-gray-700 mb-6">{errorMessage}</p>
+      {showErrorPopup && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/10">
+          <div className={`rounded-[1.75rem] p-7 max-w-sm w-full shadow-2xl text-center border animate-slide-up ${isDark ? "bg-zinc-900 border-white/10" : "bg-white border-slate-200"}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-rose-500/10" : "bg-rose-100"}`}>
+              <FiAlertTriangle className="w-8 h-8 text-rose-500" />
+            </div>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Oops</h3>
+            <p className={`text-sm mb-7 ${subtleTextClass}`}>{errorMessage}</p>
             <button
               onClick={() => setShowErrorPopup(false)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-lg font-semibold"
+              className={`w-full py-3 rounded-xl font-semibold border ${
+                isDark
+                  ? "bg-zinc-800 border-white/10 text-white hover:bg-zinc-700"
+                  : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+              }`}
             >
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </>
+    </div>
   );
 }
 

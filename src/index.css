@@ -5,11 +5,102 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* Stunning Glow effects */
+  .glow-indigo {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  }
+  .glow-emerald {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  }
+  .glow-rose {
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  }
+  
+  /* Deep Space Gradient Mesh */
+  .bg-mesh-dark {
+    background-color: #030712;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(30, 27, 75, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(24, 24, 27, 0.4) 0px, transparent 50%);
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-slide-up {
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slowPan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-pan {
+  background-size: 200% 200%;
+  animation: slowPan 15s ease infinite;
+}
+
+@keyframes dropdownItemIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
 @layer base {
 	html, body, #root {
 		font-family: 'Montserrat', ui-sans-serif, system-ui, -apple-system,
 			'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
 	}
+	html, body {
+		overflow: hidden;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	#root {
+		height: 100%;
+		overflow: hidden;
+	}
+}
+
+/* Custom thin scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background-color: rgba(128, 128, 128, 0.25);
+	border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(128, 128, 128, 0.4);
+}
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(128, 128, 128, 0.25) transparent;
 }
 
 @keyframes popupFade {

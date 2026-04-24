@@ -55,7 +55,7 @@ Pastikan Anda memiliki:
 
 - **Node.js** (v14 atau lebih tinggi)
 - **npm** atau **yarn**
-- **GoDone Backend** (running di `http://localhost:5000`)
+- **GoDone Backend** (running di `http://localhost:8000`)
 
 Cek instalasi:
 ```bash
@@ -79,8 +79,7 @@ npm install
 ### 3. Setup Environment Variables
 Buat file `.env.local` di root folder:
 ```env
-VITE_API_BASE_URL=http://localhost:5000
-VITE_BACKEND_URL=http://backend-go-done-production.up.railway.app
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ## ⚙️ Konfigurasi
@@ -89,12 +88,8 @@ VITE_BACKEND_URL=http://backend-go-done-production.up.railway.app
 Edit file `src/api/backend.js`:
 
 ```javascript
-const backend = axios.create({
-  baseURL: "http://localhost:5000", // Development
-  // atau
-  baseURL: "https://your-production-backend.com", // Production
-  timeout: 10000,
-});
+// src/api/backend.js akan membaca VITE_API_BASE_URL
+// dan otomatis menambahkan /api jika belum ada.
 ```
 
 ### Tailwind CSS
@@ -329,7 +324,7 @@ File `src/api/backend.js` menghandle:
 
 **Base URL:**
 ```javascript
-baseURL: process.env.VITE_API_BASE_URL || "http://localhost:5000"
+baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
 ```
 
 **Request Interceptor:**
@@ -441,8 +436,7 @@ Buat `.env.local`:
 
 ```env
 # API Configuration
-VITE_API_BASE_URL=http://localhost:5000
-VITE_BACKEND_URL=https://api-godone.example.com
+VITE_API_BASE_URL=http://localhost:8000
 
 # App Configuration
 VITE_APP_NAME=GoDone

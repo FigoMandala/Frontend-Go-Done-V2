@@ -1,54 +1,48 @@
 import React, { useState, useEffect } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { FiMaximize2, FiMinimize2, FiCheck } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMaximize2, FiMinimize2, FiCalendar } from "react-icons/fi";
 import backend from "../api/backend";
 
-// ============================================================
-// MAIN CALENDAR COMPONENT
-// ============================================================
-function Calendar() {
+const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // SUCCESS POPUP
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-
-  // BACKEND TASK DATA
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Day Selection State
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedEvents, setSelectedEvents] = useState([]);
-
-  // View Mode: "all" or "selected"
   const [viewMode, setViewMode] = useState("all");
 
-  // Fetch tasks - filter completed tasks
+  const [theme, setTheme] = useState(localStorage.getItem("dashboardTheme") || "light");
+  const isDark = theme === "dark";
+
+  useEffect(() => {
+    const handleThemeChange = (event) => {
+      if (event.detail === "light" || event.detail === "dark") setTheme(event.detail);
+    };
+    window.addEventListener("dashboardThemeChange", handleThemeChange);
+    return () => window.removeEventListener("dashboardThemeChange", handleThemeChange);
+  }, []);
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const res = await backend.get("/tasks");
-
         const parsed = res.data
           .filter((t) => {
-            const normalizedStatus = (t.status || "").toLowerCase();
-            return normalizedStatus !== 'done' && normalizedStatus !== 'completed';
+            const s = (t.status || "").toLowerCase();
+            return s !== "done" && s !== "completed";
           })
-          .map((t) => {
-            const deadline = (t.deadline || "").trim();
-            
-            return {
-              id: t.task_id,
-              category: t.category_name,
-              title: t.title,
-              description: t.description,
-              deadline: deadline,
-              priority: t.priority?.toLowerCase(),
-              status: t.status,
-            };
-          });
-
+          .map((t) => ({
+            id: t.task_id,
+            category: t.category_name,
+            title: t.title,
+            description: t.description,
+            deadline: (t.deadline || "").trim(),
+            priority: t.priority?.toLowerCase(),
+            status: t.status,
+          }));
         setTasks(parsed);
       } catch (e) {
         console.error("Error fetching tasks:", e);
@@ -56,435 +50,324 @@ function Calendar() {
         setLoading(false);
       }
     };
-
     fetchTasks();
   }, []);
 
-  // priority color helpers
-  const getPriorityColor = (p) => {
-    if (!p) return "bg-blue-100 border-blue-500 text-blue-700";
-
-    switch (p.toLowerCase()) {
-      case "high":
-        return "bg-red-100 border-red-500 text-red-700";
-      case "medium":
-        return "bg-yellow-100 border-yellow-500 text-yellow-700";
-      case "low":
-        return "bg-green-100 border-green-500 text-green-700";
-      default:
-        return "bg-blue-100 border-blue-500 text-blue-700";
-    }
-  };
+  const panelClass = isDark
+    ? "bg-zinc-900/40 border-zinc-800/80 shadow-md shadow-black/10"
+    : "bg-white/90 border-slate-200/60 shadow-sm shadow-slate-200/50";
+  const headingClass = isDark ? "text-zinc-50" : "text-slate-900";
+  const subtleClass = isDark ? "text-zinc-400" : "text-slate-500";
 
   const getPriorityDot = (p) => {
-    switch (p?.toLowerCase()) {
-      case "high":
-        return "bg-red-400";
-      case "medium":
-        return "bg-yellow-400";
-      case "low":
-        return "bg-green-400";
-      default:
-        return "bg-blue-400";
+    switch (p) {
+      case "high": return "bg-rose-500";
+      case "medium": return "bg-amber-500";
+      case "low": return "bg-emerald-500";
+      default: return "bg-zinc-400";
     }
   };
 
-  // calendar logic
-  const daysInMonth = (date) =>
-    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = (date) =>
-    new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const getPriorityBadge = (p) => {
+    switch (p) {
+      case "high": return isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-200";
+      case "medium": return isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-600 border-amber-200";
+      case "low": return isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200";
+      default: return isDark ? "bg-zinc-800/50 text-zinc-400 border-zinc-700/50" : "bg-slate-50 text-slate-500 border-slate-200";
+    }
+  };
 
-  const monthName = currentDate.toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
+  // Calendar logic
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const today = new Date();
 
-  const prevMonth = () =>
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
-    );
-
-  const nextMonth = () =>
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
-    );
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1));
 
   const getEventsForDay = (day) => {
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
-
-    return tasks.filter((task) => {
-      if (!task.deadline || !task.title || !task.title.trim()) return false;
-
-      const parts = task.deadline.split("-");
+    const cm = month + 1;
+    return tasks.filter((t) => {
+      if (!t.deadline || !t.title?.trim()) return false;
+      const parts = t.deadline.split("-");
       if (parts.length !== 3) return false;
-
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10);
-      const dayNum = parseInt(parts[2], 10);
-
-      return dayNum === day && month === currentMonth && year === currentYear;
+      return parseInt(parts[2]) === day && parseInt(parts[1]) === cm && parseInt(parts[0]) === year;
     });
   };
 
-  // Fill empty days
   const days = [];
-  for (let i = 0; i < firstDayOfMonth(currentDate); i++) days.push(null);
-  for (let i = 1; i <= daysInMonth(currentDate); i++) days.push(i);
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
-  // Filter valid tasks for sidebar display
-  const validTasks = tasks.filter(task => task.title && task.title.trim());
+  const validTasks = tasks.filter((t) => t.title?.trim());
 
   const handleDayClick = (day) => {
     if (!day) return;
-
     const events = getEventsForDay(day);
     setSelectedDay(day);
     setSelectedEvents(events);
-    setViewMode("selected"); // Switch to selected view
+    setViewMode("selected");
   };
 
-  return (
-    <div className="relative flex flex-col gap-6">
+  const isToday = (day) => day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
-      {/* SUCCESS POPUP */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center text-center max-w-lg w-full mx-4 animate-scale-in">
-            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4 shadow-green-200 shadow-lg">
-              <FiCheck className="text-white w-8 h-8 stroke-[3]" />
-            </div>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              Congratulations!
-            </h2>
-            <p className="text-gray-500/70 mb-6 font-medium">
-              You have successfully added a new task!
-            </p>
-
-            <button
-              onClick={() => setShowSuccessPopup(false)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-10 rounded-lg shadow-md active:scale-95"
-            >
-              Ok
-            </button>
+  // Task card component
+  const TaskCard = ({ task }) => (
+    <div className={`rounded-2xl border p-3.5 transition-all duration-200 ${isDark ? "bg-zinc-900 border-zinc-800 hover:border-zinc-700" : "bg-white border-slate-200/70 hover:border-slate-300 hover:shadow-sm"}`}>
+      <div className="flex items-start gap-3">
+        <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${getPriorityDot(task.priority)}`}></span>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-semibold truncate ${headingClass}`}>{task.title}</p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {task.category && <span className={`text-[11px] ${subtleClass}`}>{task.category}</span>}
+            {task.category && <span className={`w-0.5 h-0.5 rounded-full ${isDark ? "bg-zinc-600" : "bg-slate-300"}`}></span>}
+            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getPriorityBadge(task.priority)}`}>
+              {task.priority || "normal"}
+            </span>
           </div>
         </div>
-      )}
-
-      {/* HEADER */}
-      <div className="flex justify-between items-center px-6 pt-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Calendar</h1>
       </div>
+    </div>
+  );
 
-      {/* GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  return (
+    <div className="min-h-full pb-10">
+      <div className="max-w-[1400px] mx-auto space-y-6 animate-slide-up">
 
-        {/* LEFT PANEL — CALENDAR */}
-        <div
-          className={`bg-white rounded-xl shadow-lg p-6 relative flex flex-col transition-all
-            ${isExpanded ? "lg:col-span-3" : "lg:col-span-2"}
-          `}
-        >
-          {/* MONTH HEADER */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">{monthName}</h2>
-
-            <div className="flex gap-2">
-              <button
-                onClick={prevMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <FaChevronLeft />
-              </button>
-              <button
-                onClick={nextMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
-              >
-                <FaChevronRight />
-              </button>
+        {/* Header */}
+        <div className={`rounded-3xl border p-5 md:p-7 backdrop-blur-xl relative overflow-hidden ${panelClass}`}>
+          <div className={`absolute -top-32 -right-16 w-80 h-80 rounded-full blur-[80px] pointer-events-none ${isDark ? "bg-indigo-500/10" : "bg-blue-400/5"}`}></div>
+          <div className="relative z-10 flex items-center gap-3">
+            <FiCalendar className={`w-5 h-5 ${isDark ? "text-indigo-400" : "text-[#21569A]"}`} />
+            <div>
+              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Schedule</p>
+              <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight ${headingClass}`}>Calendar</h1>
             </div>
           </div>
-
-          {/* DAYS HEADER */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div
-                key={d}
-                className="text-center font-semibold text-gray-600 py-2"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* DAYS GRID */}
-          <div className="grid grid-cols-7 gap-2 mb-12">
-            {days.map((day, idx) => {
-              const events = day ? getEventsForDay(day) : [];
-
-              const hasHigh = events.some((e) => e.priority === "high");
-              const hasMedium = events.some((e) => e.priority === "medium");
-              const hasLow = events.some((e) => e.priority === "low");
-
-              const bgColor = hasHigh
-                ? "bg-red-200 border-red-300"
-                : hasMedium
-                ? "bg-yellow-100 border-yellow-300"
-                : hasLow
-                ? "bg-green-100 border-green-300"
-                : "bg-gray-50 border-transparent hover:border-blue-200";
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => handleDayClick(day)}
-                  className={`
-                    p-2 rounded-lg flex flex-col items-start justify-start border transition-all
-                    ${day === null ? "cursor-default" : "cursor-pointer"}
-                    ${isExpanded ? "min-h-[120px]" : "min-h-[80px]"}
-                    ${bgColor}
-                  `}
-                >
-                  {day !== null && (
-                    <>
-                      {/* DAY NUMBER */}
-                      <div className="flex justify-between items-center w-full">
-                        <span className="text-sm font-medium text-gray-700">
-                          {day}
-                        </span>
-
-                        {/* PRIORITY DOTS */}
-                        <div className="flex gap-1">
-                          {hasHigh && <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>}
-                          {hasMedium && <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>}
-                          {hasLow && <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>}
-                        </div>
-                      </div>
-
-                      {/* EVENTS PER DAY */}
-                      <div className="w-full mt-1 flex flex-col gap-1">
-                        {events.map((ev, i) =>
-                          isExpanded ? (
-                            <div
-                              key={i}
-                              className={`text-[10px] p-1 rounded font-semibold truncate w-full shadow-sm border-l-4 ${getPriorityColor(
-                                ev.priority
-                              )}`}
-                            >
-                              {ev.title}
-                            </div>
-                          ) : (
-                            <div
-                              key={i}
-                              className={`w-full h-1.5 rounded-full ${getPriorityDot(
-                                ev.priority
-                              )}`}
-                            ></div>
-                          )
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* EXPAND BUTTON */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="absolute bottom-6 right-6 bg-[#21569A] hover:bg-blue-700 text-white p-3 rounded-xl shadow-lg active:scale-95"
-          >
-            {isExpanded ? (
-              <FiMinimize2 className="w-6 h-6" />
-            ) : (
-              <FiMaximize2 className="w-6 h-6" />
-            )}
-          </button>
         </div>
 
-        {/* RIGHT SIDEBAR */}
-        {!isExpanded && (
-          <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col h-full">
-            {/* HEADER - TAB BUTTONS */}
-            <div className="flex gap-2 mb-6">
-              <button
-                onClick={() => setViewMode("all")}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
-                  viewMode === "all"
-                    ? "bg-[#21569A] text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                All Events
-              </button>
-              <button
-                onClick={() => setViewMode("selected")}
-                className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${
-                  viewMode === "selected"
-                    ? "bg-[#21569A] text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Selected
-              </button>
+        {/* Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+          {/* Calendar Panel */}
+          <div className={`rounded-3xl border backdrop-blur-xl p-5 md:p-6 relative flex flex-col transition-all ${panelClass} ${isExpanded ? "lg:col-span-3" : "lg:col-span-2"}`}>
+
+            {/* Month Navigation */}
+            <div className="flex justify-between items-center mb-5">
+              <h2 className={`text-lg font-bold tracking-tight ${headingClass}`}>
+                {MONTHS[month]} {year}
+              </h2>
+              <div className="flex gap-1.5">
+                <button onClick={prevMonth} className={`p-2.5 rounded-xl transition-all ${isDark ? "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100" : "hover:bg-slate-100 text-slate-400 hover:text-slate-800"}`}>
+                  <FiChevronLeft className="w-4 h-4" />
+                </button>
+                <button onClick={nextMonth} className={`p-2.5 rounded-xl transition-all ${isDark ? "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100" : "hover:bg-slate-100 text-slate-400 hover:text-slate-800"}`}>
+                  <FiChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* SELECTED DATE HEADER */}
-            {viewMode === "selected" && selectedDay && (
-              <div className="mb-4 pb-3 border-b border-gray-200">
-                <h3 className="text-sm font-bold text-gray-800">
-                  {new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay).toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric"
-                  })}
-                </h3>
-              </div>
-            )}
+            {/* Day Headers */}
+            <div className="grid grid-cols-7 gap-1.5 mb-2">
+              {DAYS_SHORT.map((d) => (
+                <div key={d} className={`text-center text-[10px] font-bold uppercase tracking-widest py-2 ${isDark ? "text-zinc-500" : "text-slate-400"}`}>
+                  {d}
+                </div>
+              ))}
+            </div>
 
-            {/* TASK LIST */}
-            <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 mb-6">
-              {loading ? (
-                <div className="text-center text-gray-500 py-6">Loading...</div>
-              ) : viewMode === "all" ? (
-                // ALL TASKS VIEW
-                validTasks.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6">No Tasks</div>
-                ) : (
-                  (() => {
-                    // Group by date
-                    const grouped = {};
-                    validTasks.forEach(task => {
-                      const date = task.deadline;
-                      if (!grouped[date]) grouped[date] = [];
-                      grouped[date].push(task);
-                    });
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-1.5 mb-14">
+              {days.map((day, idx) => {
+                const events = day ? getEventsForDay(day) : [];
+                const hasHigh = events.some((e) => e.priority === "high");
+                const hasMedium = events.some((e) => e.priority === "medium");
+                const hasLow = events.some((e) => e.priority === "low");
+                const hasEvents = events.length > 0;
+                const todayMark = day && isToday(day);
+                const isSelected = day === selectedDay && viewMode === "selected";
 
-                    // Sort dates
-                    const sortedDates = Object.keys(grouped).sort();
-
-                    return sortedDates.map(date => {
-                      const tasks = grouped[date];
-                      const dateObj = new Date(date + "T00:00:00");
-                      const formattedDate = dateObj.toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric"
-                      });
-
-                      return (
-                        <div key={date} className="mb-4">
-                          {/* DATE HEADER */}
-                          <h4 className="text-sm font-bold text-gray-800 mb-2">
-                            {formattedDate}
-                          </h4>
-
-                          {/* TASKS FOR THIS DATE */}
-                          <div className="space-y-2">
-                            {tasks.map(task => (
-                              <div
-                                key={task.id}
-                                className={`p-3 rounded-lg border-l-4 ${getPriorityColor(
-                                  task.priority
-                                )}`}
-                              >
-                                <p className="text-sm font-semibold mb-1">
-                                  {task.title}
-                                </p>
-                                <p className="text-xs">
-                                  {task.deadline} <span className={
-                                    task.priority === "high"
-                                      ? "text-red-600 font-semibold"
-                                      : task.priority === "medium"
-                                      ? "text-yellow-600 font-semibold"
-                                      : "text-green-600 font-semibold"
-                                  }>
-                                    {task.priority} Priority
-                                  </span>
-                                </p>
-                              </div>
-                            ))}
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleDayClick(day)}
+                    className={`rounded-xl flex flex-col items-start justify-start p-2 border transition-all duration-200 ${
+                      isExpanded ? "min-h-[110px]" : "min-h-[72px]"
+                    } ${
+                      day === null ? "cursor-default border-transparent" :
+                      isSelected
+                        ? isDark ? "cursor-pointer border-indigo-500/40 bg-indigo-500/10" : "cursor-pointer border-blue-400/40 bg-blue-50/60"
+                        : hasEvents
+                          ? isDark ? "cursor-pointer border-zinc-700/50 bg-zinc-800/40 hover:border-zinc-600" : "cursor-pointer border-slate-200/70 bg-slate-50/60 hover:border-slate-300"
+                          : isDark ? "cursor-pointer border-transparent hover:bg-zinc-800/30 hover:border-zinc-700/30" : "cursor-pointer border-transparent hover:bg-slate-50/50 hover:border-slate-200/30"
+                    }`}
+                  >
+                    {day !== null && (
+                      <>
+                        <div className="flex justify-between items-center w-full">
+                          <span className={`text-xs font-semibold flex items-center justify-center w-6 h-6 rounded-lg ${
+                            todayMark
+                              ? isDark ? "bg-indigo-600 text-white" : "bg-[#21569A] text-white"
+                              : headingClass
+                          }`}>
+                            {day}
+                          </span>
+                          {/* Priority dots */}
+                          <div className="flex gap-0.5">
+                            {hasHigh && <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>}
+                            {hasMedium && <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>}
+                            {hasLow && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
                           </div>
                         </div>
-                      );
-                    });
-                  })()
-                )
-              ) : (
-                // SELECTED EVENTS VIEW
-                selectedEvents.length === 0 ? (
-                  <div className="text-center text-gray-500 py-6">
-                    {selectedDay 
-                      ? "No tasks on this date"
-                      : "Click a date to view tasks"}
+
+                        {/* Events preview */}
+                        <div className="w-full mt-1 flex flex-col gap-0.5">
+                          {events.slice(0, isExpanded ? 4 : 2).map((ev, i) =>
+                            isExpanded ? (
+                              <div key={i} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold truncate w-full border-l-2 ${
+                                ev.priority === "high"
+                                  ? isDark ? "bg-rose-500/10 text-rose-400 border-rose-500" : "bg-rose-50 text-rose-700 border-rose-500"
+                                  : ev.priority === "medium"
+                                    ? isDark ? "bg-amber-500/10 text-amber-400 border-amber-500" : "bg-amber-50 text-amber-700 border-amber-500"
+                                    : isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500" : "bg-emerald-50 text-emerald-700 border-emerald-500"
+                              }`}>
+                                {ev.title}
+                              </div>
+                            ) : (
+                              <div key={i} className={`w-full h-1 rounded-full ${getPriorityDot(ev.priority)}`}></div>
+                            )
+                          )}
+                          {events.length > (isExpanded ? 4 : 2) && (
+                            <span className={`text-[8px] font-bold ${subtleClass}`}>+{events.length - (isExpanded ? 4 : 2)} more</span>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {selectedEvents.map(task => (
-                      <div
-                        key={task.id}
-                        className={`p-3 rounded-lg border-l-4 ${getPriorityColor(
-                          task.priority
-                        )}`}
-                      >
-                        <p className="text-sm font-semibold mb-1">
-                          {task.title}
-                        </p>
-                        <p className="text-xs">
-                          {task.deadline} <span className={
-                            task.priority === "high"
-                              ? "text-red-600 font-semibold"
-                              : task.priority === "medium"
-                              ? "text-yellow-600 font-semibold"
-                              : "text-green-600 font-semibold"
-                          }>
-                            {task.priority} Priority
-                          </span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )
-              )}
+                );
+              })}
             </div>
 
-            {/* EVENT TYPES */}
-            <div className="bg-gray-100 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-gray-800 mb-3">
-                Event Types
-              </h3>
+            {/* Expand Button */}
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`absolute bottom-5 right-5 p-3 rounded-2xl transition-all shadow-lg ${
+                isDark ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20" : "bg-[#21569A] hover:bg-[#1a4580] text-white shadow-blue-500/20"
+              }`}
+            >
+              {isExpanded ? <FiMinimize2 className="w-4 h-4" /> : <FiMaximize2 className="w-4 h-4" />}
+            </button>
+          </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded bg-red-500"></div>
-                  <span className="text-xs font-semibold text-gray-700">
-                    High Priority
-                  </span>
+          {/* Right Sidebar */}
+          {!isExpanded && (
+            <div className={`rounded-3xl border backdrop-blur-xl flex flex-col ${panelClass}`}>
+              {/* Tabs */}
+              <div className={`flex gap-1.5 p-4 border-b ${isDark ? "border-zinc-800/80" : "border-slate-200/60"}`}>
+                <button
+                  onClick={() => setViewMode("all")}
+                  className={`flex-1 py-2 px-3 rounded-xl font-semibold text-xs transition-all ${
+                    viewMode === "all"
+                      ? isDark ? "bg-indigo-600 text-white shadow-sm" : "bg-[#21569A] text-white shadow-sm"
+                      : isDark ? "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  All Events
+                </button>
+                <button
+                  onClick={() => setViewMode("selected")}
+                  className={`flex-1 py-2 px-3 rounded-xl font-semibold text-xs transition-all ${
+                    viewMode === "selected"
+                      ? isDark ? "bg-indigo-600 text-white shadow-sm" : "bg-[#21569A] text-white shadow-sm"
+                      : isDark ? "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Selected
+                </button>
+              </div>
+
+              {/* Selected date header */}
+              {viewMode === "selected" && selectedDay && (
+                <div className={`px-5 pt-4 pb-2`}>
+                  <h3 className={`text-sm font-bold ${headingClass}`}>
+                    {new Date(year, month, selectedDay).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  </h3>
                 </div>
+              )}
 
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded bg-yellow-500"></div>
-                  <span className="text-xs font-semibold text-gray-700">
-                    Medium Priority
-                  </span>
-                </div>
+              {/* Task list */}
+              <div className="flex-1 px-4 py-3 space-y-2.5 overflow-y-auto custom-scrollbar">
+                {loading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => <div key={i} className={`h-14 rounded-2xl animate-pulse ${isDark ? "bg-zinc-800/50" : "bg-slate-100"}`}></div>)}
+                  </div>
+                ) : viewMode === "all" ? (
+                  validTasks.length === 0 ? (
+                    <div className={`flex flex-col items-center justify-center py-10 text-center ${subtleClass}`}>
+                      <FiCalendar className={`w-8 h-8 mb-3 ${isDark ? "text-zinc-600" : "text-slate-300"}`} />
+                      <p className="text-sm font-medium">No events</p>
+                    </div>
+                  ) : (
+                    (() => {
+                      const grouped = {};
+                      validTasks.forEach((t) => {
+                        const d = t.deadline || "No date";
+                        if (!grouped[d]) grouped[d] = [];
+                        grouped[d].push(t);
+                      });
+                      return Object.keys(grouped).sort().map((date) => {
+                        const dateTasks = grouped[date];
+                        const dateObj = date !== "No date" ? new Date(date + "T00:00:00") : null;
+                        const formattedDate = dateObj ? dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "No date";
+                        return (
+                          <div key={date} className="mb-1">
+                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${subtleClass}`}>{formattedDate}</p>
+                            <div className="space-y-2">
+                              {dateTasks.map((t) => <TaskCard key={t.id} task={t} />)}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()
+                  )
+                ) : (
+                  selectedEvents.length === 0 ? (
+                    <div className={`flex flex-col items-center justify-center py-10 text-center ${subtleClass}`}>
+                      <FiCalendar className={`w-8 h-8 mb-3 ${isDark ? "text-zinc-600" : "text-slate-300"}`} />
+                      <p className="text-sm font-medium">{selectedDay ? "No tasks on this date" : "Click a date to view tasks"}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedEvents.map((t) => <TaskCard key={t.id} task={t} />)}
+                    </div>
+                  )
+                )}
+              </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded bg-green-500"></div>
-                  <span className="text-xs font-semibold text-gray-700">
-                    Low Priority
-                  </span>
+              {/* Legend */}
+              <div className={`p-4 border-t ${isDark ? "border-zinc-800/80" : "border-slate-200/60"}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${subtleClass}`}>Priority Legend</p>
+                <div className="flex gap-4">
+                  {[
+                    { label: "High", dot: "bg-rose-500" },
+                    { label: "Medium", dot: "bg-amber-500" },
+                    { label: "Low", dot: "bg-emerald-500" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${item.dot}`}></div>
+                      <span className={`text-[11px] font-medium ${subtleClass}`}>{item.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-export default Calendar;
+export default CalendarPage;

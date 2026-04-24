@@ -32,6 +32,7 @@ export default function getCroppedImg(imageSrc, pixelCrop) {
     };
 
     image.onerror = reject;
+    image.crossOrigin = 'Anonymous';
     image.src = imageSrc;
   });
 }
