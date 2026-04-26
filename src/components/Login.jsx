@@ -115,15 +115,7 @@ function Login() {
                 {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
               </button>
             </div>
-            <div className="flex justify-end mt-1">
-              <button
-                type="button"
-                onClick={() => navigate('/forgot-password')}
-                className="text-xs font-bold text-[#21569A] hover:text-blue-700 hover:underline transition-all"
-              >
-                Lupa Password?
-              </button>
-            </div>
+          
           </div>
 
           <div className="flex flex-col mt-10">
