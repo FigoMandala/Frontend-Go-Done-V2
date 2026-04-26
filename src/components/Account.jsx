@@ -26,6 +26,7 @@ function Account() {
   const [user, setUser] = useState({});
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [notifOn, setNotifOn] = useState(() => {
     const saved = localStorage.getItem('notifEnabled');
@@ -129,6 +130,8 @@ function Account() {
   };
 
   const confirmDeleteAccount = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const res = await backend.delete('/user/delete', {
         data: { currentPassword: formData.currentPassword },
@@ -149,10 +152,13 @@ function Account() {
       setIsPopupError(true);
       setPopupMessage('Failed to delete account!');
       setShowSuccessPopup(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSaveProfile = async () => {
+    if (isLoading) return;
     if (notifOn) toast.dismiss();
 
     if (!formData.firstName.trim()) return showToast('error', 'First name tidak boleh kosong!');
@@ -165,6 +171,8 @@ function Account() {
       last_name: formData.lastName,
       email: formData.email,
     };
+
+    setIsLoading(true);
 
     try {
       const res = await backend.put('/user/update', payload);
@@ -195,10 +203,13 @@ function Account() {
       setIsPopupError(true);
       setPopupMessage('Failed to update profile!');
       setShowSuccessPopup(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSavePassword = async () => {
+    if (isLoading) return;
     if (notifOn) toast.dismiss();
 
     if (!formData.currentPassword.trim()) {
@@ -231,6 +242,8 @@ function Account() {
       confirmPassword: formData.confirmPassword,
     };
 
+    setIsLoading(true);
+
     try {
       const res = await backend.put('/user/update', payload);
 
@@ -256,6 +269,8 @@ function Account() {
       setIsPopupError(true);
       setPopupMessage('Failed to update password!');
       setShowSuccessPopup(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -609,9 +624,10 @@ function Account() {
             </button>
             <button
               onClick={confirmDeleteAccount}
-              className="rounded-2xl px-4 py-4 font-bold text-sm text-white transition-all bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/20 active:scale-95"
+              disabled={isLoading}
+              className={`rounded-2xl px-4 py-4 font-bold text-sm text-white transition-all bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/20 active:scale-95 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Delete Forever
+              {isLoading ? "Deleting..." : "Delete Forever"}
             </button>
           </div>
         </div>
@@ -722,9 +738,10 @@ function Account() {
               <button
                 type="button"
                 onClick={handleSaveProfile}
-                className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-xs text-white transition-all shadow-sm active:scale-95 ${isDark ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/15' : 'bg-[#21569A] hover:bg-[#1a4580] shadow-blue-500/15'}`}
+                disabled={isLoading}
+                className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-xs text-white transition-all shadow-sm active:scale-95 ${isDark ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/15' : 'bg-[#21569A] hover:bg-[#1a4580] shadow-blue-500/15'} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <FiCheck className="w-3.5 h-3.5" /> Save Changes
+                <FiCheck className="w-3.5 h-3.5" /> {isLoading ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"

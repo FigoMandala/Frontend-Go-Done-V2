@@ -11,6 +11,7 @@ function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -53,6 +54,9 @@ function Register() {
       toast.error("Konfirmasi password tidak cocok!");
       return;
     }
+
+    if (isLoading) return;
+    setIsLoading(true);
 
     try {
       const res = await backend.post("/auth/register", {
@@ -98,6 +102,8 @@ function Register() {
         const backendMessage = err.response?.data?.message;
         toast.error(backendMessage || "Terjadi kesalahan saat registrasi!");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -239,9 +245,10 @@ function Register() {
           <div className="flex flex-col mt-8">
             <button
               type="submit"
-              className="bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full"
+              disabled={isLoading}
+              className={`bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Register
+              {isLoading ? "Registering..." : "Register"}
             </button>
             
             <p className="mt-8 text-center text-slate-500 font-medium text-sm">

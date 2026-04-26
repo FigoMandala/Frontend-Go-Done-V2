@@ -20,7 +20,9 @@ function ForgotPassword() {
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     if (!email) return toast.error("Email cannot be empty!");
-    
+
+    // Clear any previous OTP before sending a new one
+    setOtp('');
     setIsLoading(true);
     try {
       const res = await backend.post('/auth/password-forgot', { email });
@@ -82,8 +84,16 @@ function ForgotPassword() {
       <div className="w-full max-w-md p-8 relative z-10 animate-slide-up">
         <div className="bg-white/80 backdrop-blur-2xl px-10 py-12 rounded-3xl shadow-2xl border border-white/50 text-center">
           
-          <button 
-            onClick={() => step === 1 ? navigate('/login') : setStep(prev => prev - 1)}
+          <button
+            onClick={() => {
+              if (step === 1) {
+                navigate('/login');
+              } else {
+                // Clear OTP state when going back so stale input doesn't persist
+                setOtp('');
+                setStep(prev => prev - 1);
+              }
+            }}
             disabled={step === 4 || isLoading}
             className="absolute top-8 left-8 p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-0"
           >
@@ -143,7 +153,7 @@ function ForgotPassword() {
                     maxLength={6}
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                    className="w-48 text-center bg-slate-50 border border-slate-200 rounded-2xl py-4 text-3xl font-black tracking-[0.5em] text-[#21569A] placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-[#21569A] transition-all"
+                    className="w-full max-w-[280px] text-center bg-blue-50/50 border-2 border-blue-100 rounded-2xl py-4 text-3xl font-black tracking-[0.5em] pl-[0.5em] text-[#21569A] placeholder-blue-200 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-[#21569A] transition-all"
                     placeholder="------"
                     required
                   />

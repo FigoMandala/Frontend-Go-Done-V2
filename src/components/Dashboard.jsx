@@ -30,6 +30,7 @@ function Dashboard() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
   const [completeTaskId, setCompleteTaskId] = useState(null);
+  const [isRequestPending, setIsRequestPending] = useState(false);
 
   const [completedTodayCount, setCompletedTodayCount] = useState(0);
   const [theme, setTheme] = useState(localStorage.getItem("dashboardTheme") || "light");
@@ -174,9 +175,11 @@ function Dashboard() {
   };
 
   const handleFinishTask = async () => {
+    if (isRequestPending) return;
     const taskId = completeTaskId;
     setShowCompleteConfirm(false);
     setCompleteTaskId(null);
+    setIsRequestPending(true);
     try {
       await backend.put(`/tasks/${taskId}`, { status: "completed" });
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
@@ -186,10 +189,14 @@ function Dashboard() {
     } catch {
       setErrorMessage("Failed to complete task.");
       setShowErrorPopup(true);
+    } finally {
+      setIsRequestPending(false);
     }
   };
 
   const handleDeleteConfirm = async () => {
+    if (isRequestPending) return;
+    setIsRequestPending(true);
     try {
       await backend.delete(`/tasks/${deleteTaskId}`);
       setTasks((prev) => prev.filter((t) => t.id !== deleteTaskId));
@@ -198,6 +205,8 @@ function Dashboard() {
     } catch {
       setErrorMessage("Failed to delete task.");
       setShowErrorPopup(true);
+    } finally {
+      setIsRequestPending(false);
     }
   };
 
@@ -541,9 +550,10 @@ function Dashboard() {
               </button>
               <button
                 onClick={handleFinishTask}
-                className={`flex-1 py-3 rounded-xl text-white font-semibold ${isDark ? "bg-emerald-600 hover:bg-emerald-700" : "bg-emerald-500 hover:bg-emerald-600"}`}
+                disabled={isRequestPending}
+                className={`flex-1 py-3 rounded-xl text-white font-semibold ${isDark ? "bg-emerald-600 hover:bg-emerald-700" : "bg-emerald-500 hover:bg-emerald-600"} ${isRequestPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                Yes, Complete
+                {isRequestPending ? "Processing..." : "Yes, Complete"}
               </button>
             </div>
           </div>
@@ -572,9 +582,10 @@ function Dashboard() {
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600"
+                disabled={isRequestPending}
+                className={`flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 ${isRequestPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                Delete
+                {isRequestPending ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

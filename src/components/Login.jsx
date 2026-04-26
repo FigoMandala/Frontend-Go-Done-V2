@@ -9,6 +9,7 @@ function Login() {
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   // --- HANDLER FUNCTIONS ---
@@ -20,6 +21,9 @@ function Login() {
     if (!emailOrUsername) return toast.error("Email atau Username tidak boleh kosong!");
     if (!password) return toast.error("Password tidak boleh kosong!");
     if (password.length < 6) return toast.error("Password minimal 6 karakter!");
+
+    if (isLoading) return;
+    setIsLoading(true);
 
     try {
       console.log("🔄 Testing connection to backend...");
@@ -56,6 +60,8 @@ function Login() {
       } else {
         toast.error("❌ Error: " + (err.message || "Unknown error"));
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -121,8 +127,12 @@ function Login() {
           </div>
 
           <div className="flex flex-col mt-10">
-            <button type="submit" className="bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full">
-              Sign In
+            <button 
+              type="submit" 
+              disabled={isLoading}
+              className={`bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? "Signing In..." : "Sign In"}
             </button>
 
             <p className="mt-8 text-center text-slate-500 font-medium text-sm">
