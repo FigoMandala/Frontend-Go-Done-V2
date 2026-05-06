@@ -76,10 +76,10 @@ function Topbar({ theme = "light" }) {
     const due = new Date(deadline); due.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return <span className="text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">Overdue</span>;
-    if (diffDays === 0) return <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Today</span>;
-    if (diffDays === 1) return <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">Tomorrow</span>;
-    return <span className="text-zinc-400 px-2.5 py-1 bg-zinc-800/50 rounded-md border border-zinc-700/50">{diffDays} Days left</span>;
+    if (diffDays < 0) return <span className="text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">Terlambat</span>;
+    if (diffDays === 0) return <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Hari ini</span>;
+    if (diffDays === 1) return <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">Besok</span>;
+    return <span className="text-zinc-400 px-2.5 py-1 bg-zinc-800/50 rounded-md border border-zinc-700/50">{diffDays} hari lagi</span>;
   };
 
   const getPriorityColor = (priority) => {
@@ -107,7 +107,7 @@ function Topbar({ theme = "light" }) {
              className={`h-5 w-auto transition-all duration-300 ${isDark ? "opacity-90 brightness-110 saturate-[0.85]" : "opacity-100"}`}
            />
         </div>
-        <span className={`font-black tracking-widest uppercase text-xs hidden sm:block ${isDark ? "text-zinc-300 opacity-80" : "text-slate-700 opacity-70"}`}>Workspace</span>
+        <span className={`font-black tracking-widest uppercase text-xs hidden sm:block ${isDark ? "text-zinc-300 opacity-80" : "text-slate-700 opacity-70"}`}>Ruang Kerja</span>
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
@@ -154,7 +154,7 @@ function Topbar({ theme = "light" }) {
               
               <div className={`flex justify-between items-center px-6 py-5 border-b ${isDark ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50/70"}`}>
                 <h3 className={`font-bold tracking-wide flex items-center gap-2 ${isDark ? "text-white" : "text-slate-800"}`}>
-                   Inbox <span className="bg-indigo-500 text-xs px-2 py-0.5 rounded-full text-white">{tasks.length}</span>
+                   Kotak Masuk <span className="bg-indigo-500 text-xs px-2 py-0.5 rounded-full text-white">{tasks.length}</span>
                 </h3>
               </div>
 
@@ -164,8 +164,8 @@ function Topbar({ theme = "light" }) {
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${isDark ? "bg-zinc-800 text-zinc-600" : "bg-slate-100 text-slate-400"}`}>
                       <FiAlertCircle className="w-6 h-6" />
                     </div>
-                    <span>No active tasks right now.</span>
-                    <span className="text-xs opacity-50">Enjoy your free time.</span>
+                    <span>Tidak ada task aktif saat ini.</span>
+                    <span className="text-xs opacity-50">Nikmati waktu luangmu.</span>
                   </div>
                 ) : (
                   <ul className={`divide-y ${isDark ? "divide-white/5" : "divide-slate-100"}`}>
@@ -199,7 +199,7 @@ function Topbar({ theme = "light" }) {
                       : "bg-[#21569A] text-white border-[#21569A] hover:bg-[#1B4B59]"
                   }`}
                 >
-                  View Activity
+                  Lihat Aktivitas
                 </button>
               </div>
             </div>
@@ -211,6 +211,6 @@ function Topbar({ theme = "light" }) {
   );
 }
 
-const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 export default Topbar;

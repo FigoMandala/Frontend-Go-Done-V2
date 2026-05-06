@@ -12,7 +12,7 @@ function ForgotPassword() {
 
   const handleSendLink = async (e) => {
     if (e) e.preventDefault();
-    if (!email) return toast.error("Email cannot be empty!");
+    if (!email) return toast.error("Email tidak boleh kosong!");
 
     setIsLoading(true);
     try {
@@ -55,14 +55,14 @@ function ForgotPassword() {
           {/* Step 1: Email input */}
           {step === 1 && (
             <div className="animate-fade-in">
-              <h2 className="text-2xl font-black text-slate-800 mb-2">Forgot Password</h2>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">Lupa Password</h2>
               <p className="text-sm font-medium text-slate-500 mb-8 px-4">
-                Enter your email and we'll send you a secure reset link. No code to copy — just click and reset.
+                Masukkan emailmu dan kami akan mengirim link reset yang aman. Tidak perlu salin kode — cukup klik dan reset.
               </p>
 
               <form onSubmit={handleSendLink} className="space-y-5 text-left">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2 px-1">Email Address</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2 px-1">Alamat Email</label>
                   <div className="relative group">
                     <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-[#21569A]" />
                     <input
@@ -70,7 +70,7 @@ function ForgotPassword() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-[#21569A] transition-all"
-                      placeholder="e.g. jessica@example.com"
+                      placeholder="cth. jessica@example.com"
                       required
                     />
                   </div>
@@ -82,8 +82,8 @@ function ForgotPassword() {
                   className="w-full bg-[#21569A] hover:bg-[#1a4580] text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 flex justify-center items-center gap-2"
                 >
                   {isLoading
-                    ? <span className="animate-pulse">Sending...</span>
-                    : <><FiSend className="w-4 h-4" /> Send Reset Link</>
+                    ? <span className="animate-pulse">Mengirim...</span>
+                    : <><FiSend className="w-4 h-4" /> Kirim Link Reset</>
                   }
                 </button>
               </form>
@@ -93,36 +93,36 @@ function ForgotPassword() {
           {/* Step 2: Check inbox */}
           {step === 2 && (
             <div className="animate-fade-in">
-              <h2 className="text-2xl font-black text-slate-800 mb-2">Check Your Inbox</h2>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">Cek Kotak Masuk</h2>
               <p className="text-sm font-medium text-slate-500 mb-6 px-4">
                 We sent a password reset link to <br />
                 <strong className="text-slate-800">{email}</strong>
               </p>
 
               <div className="bg-blue-50 border border-blue-100 rounded-2xl px-6 py-5 text-left mb-8">
-                <p className="text-xs font-bold text-[#21569A] uppercase tracking-widest mb-2">What to do next</p>
+                <p className="text-xs font-bold text-[#21569A] uppercase tracking-widest mb-2">Langkah selanjutnya</p>
                 <ol className="text-sm text-slate-600 space-y-1.5 list-decimal list-inside font-medium">
-                  <li>Open your email inbox</li>
-                  <li>Find the email from <span className="font-bold text-slate-800">GoDone App</span></li>
-                  <li>Click <span className="font-bold text-slate-800">"Reset My Password"</span></li>
-                  <li>Create your new password</li>
+                  <li>Buka kotak masuk emailmu</li>
+                  <li>Temukan email dari <span className="font-bold text-slate-800">GoDone App</span></li>
+                  <li>Klik <span className="font-bold text-slate-800">"Reset Password Saya"</span></li>
+                  <li>Buat password baru</li>
                 </ol>
               </div>
 
-              <p className="text-xs text-slate-400 mb-5">Didn't receive the email?</p>
+              <p className="text-xs text-slate-400 mb-5">Tidak menerima email?</p>
               <button
                 onClick={handleSendLink}
                 disabled={isLoading}
                 className="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-3.5 rounded-2xl transition-all active:scale-[0.98] disabled:opacity-50 text-sm"
               >
-                {isLoading ? "Resending..." : "Resend Link"}
+                {isLoading ? "Mengirim Ulang..." : "Kirim Ulang Link"}
               </button>
 
               <button
                 onClick={() => navigate('/login')}
                 className="mt-3 w-full bg-[#21569A] hover:bg-[#1a4580] text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] text-sm"
               >
-                Back to Login
+                Kembali ke Login
               </button>
             </div>
           )}

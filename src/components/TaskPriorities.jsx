@@ -43,7 +43,7 @@ const Popup = ({ show, type, title, message, onConfirm, onCancel, confirmText = 
         <div className={`flex gap-3 ${isConfirm ? "" : "justify-center"}`}>
           {isConfirm ? (
             <>
-              <button onClick={onCancel} className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"}`}>Cancel</button>
+              <button onClick={onCancel} className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"}`}>Batal</button>
               <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold text-sm hover:bg-rose-600 transition-colors">{confirmText}</button>
             </>
           ) : (
@@ -88,7 +88,7 @@ function TaskPriorities() {
       ring: isDark ? "ring-rose-500/20" : "ring-rose-200",
       badge: isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-200",
       headerGradient: isDark ? "from-rose-500/10 to-transparent" : "from-rose-50 to-transparent",
-      label: "High Priority",
+      label: "Prioritas Tinggi",
       iconColor: "text-rose-500",
     },
     Medium: {
@@ -96,7 +96,7 @@ function TaskPriorities() {
       ring: isDark ? "ring-amber-500/20" : "ring-amber-200",
       badge: isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-50 text-amber-600 border-amber-200",
       headerGradient: isDark ? "from-amber-500/10 to-transparent" : "from-amber-50 to-transparent",
-      label: "Medium Priority",
+      label: "Prioritas Sedang",
       iconColor: "text-amber-500",
     },
     Low: {
@@ -104,7 +104,7 @@ function TaskPriorities() {
       ring: isDark ? "ring-emerald-500/20" : "ring-emerald-200",
       badge: isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-200",
       headerGradient: isDark ? "from-emerald-500/10 to-transparent" : "from-emerald-50 to-transparent",
-      label: "Low Priority",
+      label: "Prioritas Rendah",
       iconColor: "text-emerald-500",
     },
   };
@@ -143,21 +143,21 @@ function TaskPriorities() {
       await backend.put(`/tasks/${editingTask.id}`, formData);
       setShowEditForm(false);
       setEditingTask(null);
-      showPopup("success", "Updated", "Task updated successfully.");
+      showPopup("success", "Diperbarui", "Task berhasil diperbarui.");
       await fetchTasks();
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to update task");
     }
   };
 
-  const handleDelete = (taskId) => showPopup("confirm", "Delete Task?", "This action cannot be undone.", { taskId });
+  const handleDelete = (taskId) => showPopup("confirm", "Hapus Task?", "Tindakan ini tidak dapat dibatalkan.", { taskId });
 
   const handleDeleteConfirm = async () => {
     const taskId = popup.data.taskId;
     try {
       await backend.delete(`/tasks/${taskId}`);
       closePopup();
-      showPopup("success", "Deleted", "Task removed successfully.");
+      showPopup("success", "Dihapus", "Task berhasil dihapus.");
       fetchTasks();
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to delete task");
@@ -167,7 +167,7 @@ function TaskPriorities() {
   const handleDone = async (taskId) => {
     try {
       await backend.put(`/tasks/${taskId}`, { status: "completed" });
-      showPopup("success", "Completed", "Task marked as done.");
+      showPopup("success", "Selesai", "Task ditandai sebagai selesai.");
       fetchTasks();
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to complete task");
@@ -195,7 +195,7 @@ function TaskPriorities() {
 
         {/* Popups */}
         <Popup show={popup.type === "success" || popup.type === "error"} type={popup.type} title={popup.title} message={popup.message} onCancel={closePopup} isDark={isDark} />
-        <Popup show={popup.type === "confirm"} type="confirm" title={popup.title} message={popup.message} onConfirm={handleDeleteConfirm} onCancel={closePopup} confirmText="Yes, Delete" isDark={isDark} />
+        <Popup show={popup.type === "confirm"} type="confirm" title={popup.title} message={popup.message} onConfirm={handleDeleteConfirm} onCancel={closePopup} confirmText="Ya, Hapus" isDark={isDark} />
 
         {/* Header */}
         <div className={`rounded-3xl border p-5 md:p-7 backdrop-blur-xl relative overflow-hidden ${panelClass}`}>
@@ -203,7 +203,7 @@ function TaskPriorities() {
           <div className="relative z-10">
             <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Overview</p>
             <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>Task Priorities</h1>
-            <p className={`mt-1 text-sm ${subtleClass}`}>{totalTasks} active task{totalTasks !== 1 ? "s" : ""} across all priorities</p>
+            <p className={`mt-1 text-sm ${subtleClass}`}>{totalTasks} task aktif di semua prioritas</p>
           </div>
         </div>
 
@@ -232,7 +232,7 @@ function TaskPriorities() {
                     </div>
                   ) : columnTasks.length === 0 ? (
                     <div className={`rounded-2xl border border-dashed flex flex-col items-center justify-center p-8 text-center ${isDark ? "border-zinc-700 bg-zinc-900/30" : "border-slate-200 bg-slate-50/50"}`}>
-                      <p className={`text-xs font-medium ${subtleClass}`}>No {priority.toLowerCase()} priority tasks</p>
+                      <p className={`text-xs font-medium ${subtleClass}`}>Tidak ada task prioritas {priority.toLowerCase()}</p>
                     </div>
                   ) : (
                     columnTasks.map((task, idx) => (

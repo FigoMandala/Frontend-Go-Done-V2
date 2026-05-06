@@ -23,22 +23,22 @@ const DEFAULT_DURATIONS = {
 
 const MODE_META = {
   focus: {
-    label: "Focus",
-    helper: "Deep work block",
+    label: "Fokus",
+    helper: "Blok kerja dalam",
     accent: "#2563eb",
     softLight: "bg-blue-50 border-blue-200 text-blue-700",
     softDark: "bg-blue-500/10 border-blue-500/20 text-blue-300",
   },
   shortBreak: {
-    label: "Short Break",
-    helper: "Recharge quickly",
+    label: "Istirahat Pendek",
+    helper: "Isi ulang energi",
     accent: "#10b981",
     softLight: "bg-emerald-50 border-emerald-200 text-emerald-700",
     softDark: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
   },
   longBreak: {
-    label: "Long Break",
-    helper: "Reset your energy",
+    label: "Istirahat Panjang",
+    helper: "Pulihkan energimu",
     accent: "#f59e0b",
     softLight: "bg-amber-50 border-amber-200 text-amber-700",
     softDark: "bg-amber-500/10 border-amber-500/20 text-amber-300",
@@ -69,6 +69,7 @@ const readInitialState = () => {
     timeLeft: DEFAULT_DURATIONS.focus,
     completedPomodoros: 0,
     cycleFocusCount: 0,
+    targetCycleCount: 4,
     autoStartNext: false,
     soundEnabled: true,
     history: [],
@@ -108,12 +109,15 @@ const readInitialState = () => {
           .slice(0, 8)
       : [];
 
+    const targetCycleCount = Number.isInteger(Number(parsed?.targetCycleCount)) ? Math.max(1, Number(parsed.targetCycleCount)) : 4;
+
     return {
       mode,
       durations,
       timeLeft,
       completedPomodoros,
       cycleFocusCount,
+      targetCycleCount,
       autoStartNext,
       soundEnabled,
       history,
@@ -133,6 +137,7 @@ function PomodoroTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [completedPomodoros, setCompletedPomodoros] = useState(initial.completedPomodoros);
   const [cycleFocusCount, setCycleFocusCount] = useState(initial.cycleFocusCount);
+  const [targetCycleCount, setTargetCycleCount] = useState(initial.targetCycleCount);
   const [autoStartNext, setAutoStartNext] = useState(initial.autoStartNext);
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
   const [history, setHistory] = useState(initial.history);
@@ -179,12 +184,13 @@ function PomodoroTimer() {
         timeLeft,
         completedPomodoros,
         cycleFocusCount,
+        targetCycleCount,
         autoStartNext,
         soundEnabled,
         history,
       })
     );
-  }, [mode, durations, timeLeft, completedPomodoros, cycleFocusCount, autoStartNext, soundEnabled, history]);
+  }, [mode, durations, timeLeft, completedPomodoros, cycleFocusCount, targetCycleCount, autoStartNext, soundEnabled, history]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -275,7 +281,7 @@ function PomodoroTimer() {
 
       if (finishedMode === "focus") {
         const nextCycleCount = countAsComplete ? cycleFocusCount + 1 : cycleFocusCount;
-        const useLongBreak = countAsComplete && nextCycleCount >= 4;
+        const useLongBreak = countAsComplete && nextCycleCount >= targetCycleCount;
 
         if (countAsComplete) {
           setCompletedPomodoros((prev) => prev + 1);
@@ -371,6 +377,21 @@ function PomodoroTimer() {
     });
   };
 
+  const setExactDuration = (targetMode, minutes) => {
+    const val = parseInt(minutes, 10);
+    if (isNaN(val)) return;
+    setDurations((prev) => {
+      const nextValue = Math.min(90 * 60, Math.max(60, val * 60));
+      const nextDurations = { ...prev, [targetMode]: nextValue };
+
+      if (!isRunning && mode === targetMode) {
+        setTimeLeft(nextValue);
+      }
+
+      return nextDurations;
+    });
+  };
+
   const requestNotificationAccess = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       setNotificationPermission("unsupported");
@@ -424,7 +445,7 @@ function PomodoroTimer() {
   const headingClass = isDark ? "text-zinc-50" : "text-slate-900";
   const subtleClass = isDark ? "text-zinc-400" : "text-slate-500";
 
-  const statusLabel = isRunning ? "Running" : "Paused";
+  const statusLabel = isRunning ? "Berjalan" : "Dijeda";
   const notificationReady = notificationPermission === "granted";
 
   const radius = 112;
@@ -439,17 +460,17 @@ function PomodoroTimer() {
           <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-blue-300" : "text-[#21569A]"}`}>
-                Deep Focus
+                Fokus Mendalam
               </p>
               <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>Pomodoro Timer</h1>
               <p className={`mt-1 text-sm ${subtleClass}`}>Mode pintar dengan auto cycle, browser notification, suara, dan shortcut keyboard.</p>
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-600"}`}>
-                Completed: {completedPomodoros}
+                Selesai: {completedPomodoros}
               </span>
               <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-600"}`}>
-                Cycle: {cycleFocusCount}/4
+                Siklus: {cycleFocusCount}/{targetCycleCount}
               </span>
             </div>
           </div>
@@ -527,7 +548,7 @@ function PomodoroTimer() {
                     }`}
                   >
                     {isRunning ? <FiPause className="w-4 h-4" /> : <FiPlay className="w-4 h-4" />}
-                    {isRunning ? "Pause" : "Start"}
+                    {isRunning ? "Jeda" : "Mulai"}
                   </button>
 
                   <button
@@ -551,22 +572,22 @@ function PomodoroTimer() {
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    <FiSkipForward className="w-4 h-4" /> Skip
+                    <FiSkipForward className="w-4 h-4" /> Lewati
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className={`rounded-2xl border p-4 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-slate-50/70 border-slate-200"}`}>
-                    <p className={`text-xs uppercase tracking-widest font-bold mb-2 ${subtleClass}`}>Current insight</p>
+                    <p className={`text-xs uppercase tracking-widest font-bold mb-2 ${subtleClass}`}>Wawasan saat ini</p>
                     <p className={`text-sm font-medium leading-relaxed ${headingClass}`}>{TIPS[tipIndex]}</p>
                   </div>
 
                   <div className={`rounded-2xl border p-4 ${isDark ? "bg-zinc-900/50 border-zinc-800" : "bg-slate-50/70 border-slate-200"}`}>
-                    <p className={`text-xs uppercase tracking-widest font-bold mb-3 ${subtleClass}`}>Keyboard shortcut</p>
+                    <p className={`text-xs uppercase tracking-widest font-bold mb-3 ${subtleClass}`}>Pintasan keyboard</p>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <span className={`px-2.5 py-1 rounded-lg border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>Space: Start/Pause</span>
+                      <span className={`px-2.5 py-1 rounded-lg border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>Space: Mulai/Jeda</span>
                       <span className={`px-2.5 py-1 rounded-lg border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>R: Reset</span>
-                      <span className={`px-2.5 py-1 rounded-lg border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>N: Skip</span>
+                      <span className={`px-2.5 py-1 rounded-lg border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>N: Lewati</span>
                     </div>
                   </div>
                 </div>
@@ -576,30 +597,40 @@ function PomodoroTimer() {
 
           <section className="xl:col-span-4 space-y-5">
             <div className={`rounded-3xl border p-5 backdrop-blur-xl ${panelClass}`}>
-              <h2 className={`text-base font-bold ${headingClass}`}>Durations</h2>
+              <h2 className={`text-base font-bold ${headingClass}`}>Durasi</h2>
               <p className={`text-xs mt-1 mb-4 ${subtleClass}`}>Atur durasi tiap mode sesuai ritme kerja kamu.</p>
 
               <div className="space-y-3">
                 {Object.keys(MODE_META).map((key) => (
                   <div key={key} className={`rounded-xl border p-3 ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-slate-200 bg-white/70"}`}>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-2">
                       <span className={`text-sm font-semibold ${headingClass}`}>{MODE_META[key].label}</span>
-                      <span className={`text-xs ${subtleClass}`}>{Math.floor(durations[key] / 60)} min</span>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => adjustDuration(key, -1)}
-                        className={`py-2 rounded-lg text-xs font-semibold border transition-colors ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg font-bold border transition-colors ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
                       >
-                        -1 min
+                        -
                       </button>
+                      <div className="flex-1 relative">
+                        <input
+                          type="number"
+                          min="1"
+                          max="90"
+                          value={Math.floor(durations[key] / 60)}
+                          onChange={(e) => setExactDuration(key, e.target.value)}
+                          className={`w-full text-center py-1.5 rounded-lg border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all ${isDark ? "bg-zinc-800/50 border-zinc-700 text-zinc-100" : "bg-slate-50 border-slate-200 text-slate-800"}`}
+                        />
+                        <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold pointer-events-none ${isDark ? "text-zinc-500" : "text-slate-400"}`}>min</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => adjustDuration(key, 1)}
-                        className={`py-2 rounded-lg text-xs font-semibold border transition-colors ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg font-bold border transition-colors ${isDark ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}
                       >
-                        +1 min
+                        +
                       </button>
                     </div>
                   </div>
@@ -608,9 +639,28 @@ function PomodoroTimer() {
             </div>
 
             <div className={`rounded-3xl border p-5 backdrop-blur-xl ${panelClass}`}>
-              <h2 className={`text-base font-bold ${headingClass}`}>Smart Features</h2>
+              <h2 className={`text-base font-bold ${headingClass}`}>Fitur Cerdas & Target</h2>
 
               <div className="mt-4 space-y-3">
+                <div className={`flex flex-col gap-2 p-3.5 rounded-xl border ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-slate-200 bg-white/70"}`}>
+                  <label className={`text-sm font-semibold ${headingClass}`}>Long Break Setelah:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="1"
+                      max="8"
+                      value={targetCycleCount}
+                      onChange={(e) => setTargetCycleCount(Number(e.target.value))}
+                      className="flex-1 accent-blue-500 h-1.5 rounded-lg appearance-none cursor-pointer"
+                      style={{ backgroundColor: isDark ? "#3f3f46" : "#e2e8f0" }}
+                    />
+                    <span className={`text-xs font-bold w-12 text-center rounded-lg py-1 border ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-200 text-slate-700"}`}>
+                      {targetCycleCount} Sesi
+                    </span>
+                  </div>
+                  <p className={`text-[11px] ${subtleClass}`}>Atur kapan kamu ingin istirahat panjang.</p>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setAutoStartNext((prev) => !prev)}
@@ -625,7 +675,7 @@ function PomodoroTimer() {
                   }`}
                 >
                   <span className="text-sm font-semibold flex items-center gap-2">
-                    <FiZap className="w-4 h-4" /> Auto start next session
+                    <FiZap className="w-4 h-4" /> Mulai sesi berikutnya otomatis
                   </span>
                   <span className="text-xs font-bold">{autoStartNext ? "ON" : "OFF"}</span>
                 </button>
@@ -644,7 +694,7 @@ function PomodoroTimer() {
                   }`}
                 >
                   <span className="text-sm font-semibold flex items-center gap-2">
-                    {soundEnabled ? <FiVolume2 className="w-4 h-4" /> : <FiVolumeX className="w-4 h-4" />} Sound alert
+                    {soundEnabled ? <FiVolume2 className="w-4 h-4" /> : <FiVolumeX className="w-4 h-4" />} Suara notifikasi
                   </span>
                   <span className="text-xs font-bold">{soundEnabled ? "ON" : "OFF"}</span>
                 </button>
@@ -654,7 +704,7 @@ function PomodoroTimer() {
                     <div>
                       <p className={`text-sm font-semibold flex items-center gap-2 ${headingClass}`}>
                         {notificationReady ? <FiBell className="w-4 h-4" /> : <FiBellOff className="w-4 h-4" />}
-                        Browser notification
+                        Notifikasi browser
                       </p>
                       <p className={`text-xs mt-1 ${subtleClass}`}>
                         {notificationPermission === "granted"
@@ -677,7 +727,7 @@ function PomodoroTimer() {
                             : "border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                         }`}
                       >
-                        Enable
+                        Aktifkan
                       </button>
                       <button
                         type="button"
@@ -691,7 +741,7 @@ function PomodoroTimer() {
                               : "border-slate-200 text-slate-400"
                         }`}
                       >
-                        Test
+                        Tes
                       </button>
                     </div>
                   </div>
@@ -700,7 +750,7 @@ function PomodoroTimer() {
             </div>
 
             <div className={`rounded-3xl border p-5 backdrop-blur-xl ${panelClass}`}>
-              <h2 className={`text-base font-bold ${headingClass}`}>Recent Sessions</h2>
+              <h2 className={`text-base font-bold ${headingClass}`}>Sesi Terbaru</h2>
               <div className="mt-3 space-y-2">
                 {history.length === 0 ? (
                   <p className={`text-sm ${subtleClass}`}>Belum ada riwayat sesi. Mulai satu sesi fokus dulu.</p>
@@ -721,7 +771,7 @@ function PomodoroTimer() {
                       <div className="text-right">
                         <p className={`text-xs ${subtleClass}`}>{new Date(item.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
                         <p className={`text-[11px] ${item.counted ? (isDark ? "text-emerald-300" : "text-emerald-600") : subtleClass}`}>
-                          {item.counted ? "Completed" : "Skipped"}
+                          {item.counted ? "Selesai" : "Dilewati"}
                         </p>
                       </div>
                     </div>

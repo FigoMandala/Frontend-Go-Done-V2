@@ -88,13 +88,13 @@ function EditTaskForm({
   };
 
   const validateForm = () => {
-    if (!taskTitle.trim()) { setValidationMessage("Task title is required!"); setShowValidationPopup(true); return false; }
-    if (!categoryId) { setValidationMessage("Please select a category!"); setShowValidationPopup(true); return false; }
-    if (!description.trim()) { setValidationMessage("Task description is required!"); setShowValidationPopup(true); return false; }
-    if (!priority) { setValidationMessage("Please select a priority!"); setShowValidationPopup(true); return false; }
-    if (!deadline) { setValidationMessage("Please select a deadline!"); setShowValidationPopup(true); return false; }
+    if (!taskTitle.trim()) { setValidationMessage("Judul task wajib diisi!"); setShowValidationPopup(true); return false; }
+    if (!categoryId) { setValidationMessage("Pilih kategori terlebih dahulu!"); setShowValidationPopup(true); return false; }
+    if (!description.trim()) { setValidationMessage("Deskripsi task wajib diisi!"); setShowValidationPopup(true); return false; }
+    if (!priority) { setValidationMessage("Pilih prioritas terlebih dahulu!"); setShowValidationPopup(true); return false; }
+    if (!deadline) { setValidationMessage("Pilih deadline terlebih dahulu!"); setShowValidationPopup(true); return false; }
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    if (new Date(deadline) < today) { setValidationMessage("Deadline cannot be in the past!"); setShowValidationPopup(true); return false; }
+    if (new Date(deadline) < today) { setValidationMessage("Deadline tidak boleh di masa lalu!"); setShowValidationPopup(true); return false; }
     return true;
   };
 
@@ -131,13 +131,13 @@ function EditTaskForm({
           <div className={`absolute -top-32 -right-16 w-80 h-80 rounded-full blur-[80px] pointer-events-none ${isDark ? "bg-indigo-500/20" : "bg-blue-400/10"}`}></div>
           <div className="relative z-10">
             <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>
-              {isEditMode ? "Edit" : "Create"}
+              {isEditMode ? "Edit" : "Buat"}
             </p>
             <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>
-              {isEditMode ? "Edit Task" : "New Task"}
+              {isEditMode ? "Edit Task" : "Task Baru"}
             </h1>
             <p className={`mt-1 text-sm ${subtleClass}`}>
-              {isEditMode ? "Update the details below." : "Fill in the details to create a task."}
+              {isEditMode ? "Perbarui detail di bawah ini." : "Isi detail untuk membuat task."}
             </p>
           </div>
         </div>
@@ -148,19 +148,19 @@ function EditTaskForm({
 
             {/* Title */}
             <div>
-              <label className={`block mb-2 ${labelClass}`}>Task Title</label>
+              <label className={`block mb-2 ${labelClass}`}>Judul Task</label>
               <input
                 type="text"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-medium transition-all focus:outline-none focus:ring-4 ${inputClass}`}
-                placeholder="What needs to be done?"
+                placeholder="Apa yang perlu diselesaikan?"
               />
             </div>
 
             {/* Category */}
             <CustomDropdown
-              label="Category"
+              label="Kategori"
               selected={categoryId}
               onSelect={(val) => setCategoryId(val)}
               options={categories}
@@ -178,20 +178,20 @@ function EditTaskForm({
 
             {/* Description */}
             <div>
-              <label className={`block mb-2 ${labelClass}`}>Description</label>
+              <label className={`block mb-2 ${labelClass}`}>Deskripsi</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-medium transition-all focus:outline-none focus:ring-4 resize-none ${inputClass}`}
-                placeholder="Add details about this task..."
+                placeholder="Tambahkan detail tentang task ini..."
               />
             </div>
 
             {/* Priority / Deadline */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <CustomDropdown
-                label="Priority"
+                label="Prioritas"
                 selected={priority}
                 onSelect={setPriority}
                 options={priorityOptions}
@@ -213,14 +213,14 @@ function EditTaskForm({
                 onClick={handleSave}
                 className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-colors shadow-sm ${isDark ? "bg-indigo-600 hover:bg-indigo-700" : "bg-[#21569A] hover:bg-[#1a4580]"}`}
               >
-                {isEditMode ? "Update Task" : "Create Task"}
+                {isEditMode ? "Perbarui Task" : "Buat Task"}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
                 className={`px-6 py-3 rounded-xl font-semibold text-sm border transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"}`}
               >
-                Cancel
+                Batal
               </button>
             </div>
           </form>
@@ -233,7 +233,7 @@ function EditTaskForm({
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-amber-500/10" : "bg-amber-100"}`}>
                 <span className="text-2xl">⚠️</span>
               </div>
-              <h3 className={`text-lg font-bold mb-2 ${headingClass}`}>Required Field</h3>
+              <h3 className={`text-lg font-bold mb-2 ${headingClass}`}>Field Wajib</h3>
               <p className={`text-sm mb-7 ${subtleClass}`}>{validationMessage}</p>
               <button
                 onClick={() => setShowValidationPopup(false)}

@@ -19,16 +19,16 @@ const normalizeDate = (str) => {
 };
 
 const formatDeadlineText = (deadline) => {
-  if (!deadline) return "No deadline";
+  if (!deadline) return "Tanpa deadline";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const [year, month, day] = normalizeDate(deadline).split("-").map(Number);
   const diff = Math.ceil((new Date(year, month - 1, day) - today) / (1000 * 3600 * 24));
-  if (diff < 0) return "Overdue";
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Tomorrow";
-  if (diff <= 7) return `${diff} days left`;
-  return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diff < 0) return "Terlambat";
+  if (diff === 0) return "Hari ini";
+  if (diff === 1) return "Besok";
+  if (diff <= 7) return `${diff} hari lagi`;
+  return new Date(year, month - 1, day).toLocaleDateString("id-ID", { month: "short", day: "numeric" });
 };
 
 // ========== Theme-aware Popup Component ==========
@@ -57,7 +57,7 @@ const Popup = ({ show, type, title, message, onConfirm, onCancel, confirmText = 
           {isConfirm ? (
             <>
               <button onClick={onCancel} className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"}`}>
-                Cancel
+                Batal
               </button>
               <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold text-sm hover:bg-rose-600 transition-colors">
                 {confirmText}
@@ -100,10 +100,10 @@ const CategoryEditPopup = ({ show, categoryName, onSave, onCancel, isDark }) => 
         />
         <div className="flex gap-3">
           <button onClick={onCancel} className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"}`}>
-            Cancel
+            Batal
           </button>
           <button onClick={() => onSave(name)} className={`flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-colors ${isDark ? "bg-indigo-600 hover:bg-indigo-700" : "bg-[#21569A] hover:bg-[#1a4580]"}`}>
-            Save
+            Simpan
           </button>
         </div>
       </div>
@@ -213,7 +213,7 @@ function MyTask() {
     try {
       const res = await backend.post("/categories", { category_name: newName });
       setCategories((prev) => [...prev, { value: res.data?.category_id, label: newName }]);
-      showPopup("success", "Category Added", "New category has been created.");
+      showPopup("success", "Kategori Ditambahkan", "Kategori baru berhasil dibuat.");
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to add category");
     }
@@ -232,7 +232,7 @@ function MyTask() {
       await backend.put(`/categories/${catId}`, { category_name: name });
       setCategories((prev) => prev.map((c) => String(c.value) === String(catId) ? { ...c, label: name } : c));
       closePopup();
-      showPopup("success", "Updated", "Category renamed successfully.");
+      showPopup("success", "Diperbarui", "Nama kategori berhasil diubah.");
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to update category");
     }
@@ -242,7 +242,7 @@ function MyTask() {
     try {
       await backend.delete(`/categories/${catId}`);
       setCategories((prev) => prev.filter((c) => String(c.value) !== String(catId)));
-      showPopup("success", "Deleted", "Category removed.");
+      showPopup("success", "Dihapus", "Kategori berhasil dihapus.");
     } catch (err) {
       if (err.response?.status === 400) {
         const found = categories.find((c) => String(c.value) === String(catId));
@@ -261,11 +261,11 @@ function MyTask() {
       if (isEditMode) {
         await backend.put(`/tasks/${editingTaskId}`, formData);
         setTasks((prev) => prev.map((t) => t.id === editingTaskId ? { ...t, categoryId: formData.category_id, title: formData.title, description: formData.description, priority: formData.priority, deadline: formData.deadline } : t));
-        showPopup("success", "Updated", "Task updated successfully.");
+        showPopup("success", "Diperbarui", "Task berhasil diperbarui.");
       } else {
         const res = await backend.post("/tasks", formData);
         setTasks((prev) => [{ id: res.data?.task_id, categoryId: formData.category_id, title: formData.title, description: formData.description, priority: formData.priority, deadline: formData.deadline, status: "pending" }, ...prev]);
-        showPopup("success", "Created", "New task has been added.");
+        showPopup("success", "Dibuat", "Task baru berhasil ditambahkan.");
       }
       setShowAddForm(false);
       setIsEditMode(false);
@@ -278,7 +278,7 @@ function MyTask() {
   };
 
   const handleDeleteClick = (taskId) => {
-    showPopup("confirm", "Delete Task?", "This action cannot be undone.", { taskId });
+    showPopup("confirm", "Hapus Task?", "Tindakan ini tidak dapat dibatalkan.", { taskId });
   };
 
   const handleDeleteConfirm = async () => {
@@ -289,7 +289,7 @@ function MyTask() {
       await backend.delete(`/tasks/${taskId}`);
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
       closePopup();
-      showPopup("success", "Deleted", "Task removed successfully.");
+      showPopup("success", "Dihapus", "Task berhasil dihapus.");
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to delete task");
     } finally {
@@ -317,7 +317,7 @@ function MyTask() {
     try {
       await backend.put(`/tasks/${taskId}`, { status: "completed" });
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
-      showPopup("success", "Completed", "Task marked as done.");
+      showPopup("success", "Selesai", "Task ditandai sebagai selesai.");
     } catch (err) {
       showPopup("error", "Error", err.response?.data?.error || "Failed to complete task");
     } finally {
@@ -403,7 +403,7 @@ function MyTask() {
 
         {/* Popups */}
         <Popup show={popup.type === "success" || popup.type === "error"} type={popup.type} title={popup.title} message={popup.message} onCancel={closePopup} isDark={isDark} />
-        <Popup show={popup.type === "confirm"} type="confirm" title={popup.title} message={popup.message} onConfirm={handleDeleteConfirm} onCancel={closePopup} confirmText="Yes, Delete" isDark={isDark} />
+        <Popup show={popup.type === "confirm"} type="confirm" title={popup.title} message={popup.message} onConfirm={handleDeleteConfirm} onCancel={closePopup} confirmText="Ya, Hapus" isDark={isDark} />
 
         {/* Complete Confirmation Popup */}
         {showCompleteConfirm && createPortal(
@@ -412,20 +412,20 @@ function MyTask() {
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
                 <FiCheckCircle className="w-7 h-7 text-emerald-500" />
               </div>
-              <h3 className={`text-lg font-bold mb-2 ${isDark ? "text-zinc-50" : "text-slate-900"}`}>Mark as Done?</h3>
+              <h3 className={`text-lg font-bold mb-2 ${isDark ? "text-zinc-50" : "text-slate-900"}`}>Tandai Selesai?</h3>
               <p className={`text-sm mb-7 ${isDark ? "text-zinc-400" : "text-slate-500"}`}>Task ini akan ditandai sebagai selesai.</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowCompleteConfirm(false); setCompleteTaskId(null); }}
                   className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"}`}
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   onClick={handleFinishTask}
                   className={`flex-1 py-3 rounded-xl text-white font-semibold text-sm transition-colors ${isDark ? "bg-emerald-600 hover:bg-emerald-700" : "bg-emerald-500 hover:bg-emerald-600"}`}
                 >
-                  Yes, Complete
+                  Ya, Selesaikan
                 </button>
               </div>
             </div>
@@ -438,12 +438,12 @@ function MyTask() {
           <div className={`absolute -top-32 -right-16 w-80 h-80 rounded-full blur-[80px] pointer-events-none ${isDark ? "bg-indigo-500/20" : "bg-blue-400/10"}`}></div>
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Task Manager</p>
-              <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>My Tasks</h1>
+              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Manajer Task</p>
+              <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>Task Saya</h1>
               <div className="flex items-center gap-4 mt-2">
-                <span className={`text-sm font-medium ${subtleClass}`}>{totalActive} active</span>
+                <span className={`text-sm font-medium ${subtleClass}`}>{totalActive} aktif</span>
                 <span className={`w-1 h-1 rounded-full ${isDark ? "bg-zinc-600" : "bg-slate-300"}`}></span>
-                <span className={`text-sm font-medium ${subtleClass}`}>{totalDone} completed</span>
+                <span className={`text-sm font-medium ${subtleClass}`}>{totalDone} selesai</span>
               </div>
             </div>
             <button
@@ -453,7 +453,7 @@ function MyTask() {
               }`}
             >
               <FiPlus className="w-4 h-4" />
-              New Task
+              Task Baru
             </button>
           </div>
         </div>
@@ -484,7 +484,7 @@ function MyTask() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder="Cari task..."
               className={`flex-1 bg-transparent text-sm font-medium outline-none ${isDark ? "text-zinc-100 placeholder-zinc-500" : "text-slate-900 placeholder-slate-400"}`}
             />
           </div>
@@ -497,10 +497,10 @@ function MyTask() {
                 isDark ? "bg-zinc-900/40 border-zinc-800/80 text-zinc-300" : "bg-white/90 border-slate-200/60 text-slate-700"
               }`}
             >
-              <option value="all">All Priority</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="all">Semua Prioritas</option>
+              <option value="high">Tinggi</option>
+              <option value="medium">Sedang</option>
+              <option value="low">Rendah</option>
             </select>
             {/* Status Filter */}
             <select
@@ -510,9 +510,9 @@ function MyTask() {
                 isDark ? "bg-zinc-900/40 border-zinc-800/80 text-zinc-300" : "bg-white/90 border-slate-200/60 text-slate-700"
               }`}
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="done">Done</option>
+              <option value="all">Semua Status</option>
+              <option value="active">Aktif</option>
+              <option value="done">Selesai</option>
             </select>
           </div>
         </div>
@@ -531,10 +531,10 @@ function MyTask() {
                 <FiCheckCircle className={`w-6 h-6 ${subtleClass}`} />
               </div>
               <h3 className={`text-[1rem] font-semibold ${headingClass}`}>
-                {searchQuery || filterPriority !== "all" || filterStatus !== "all" ? "No matching tasks" : "No tasks yet"}
+                {searchQuery || filterPriority !== "all" || filterStatus !== "all" ? "Tidak ada task yang cocok" : "Belum ada task"}
               </h3>
               <p className={`mt-1 text-sm ${subtleClass}`}>
-                {searchQuery || filterPriority !== "all" || filterStatus !== "all" ? "Try adjusting your filters." : "Create your first task to get started."}
+                {searchQuery || filterPriority !== "all" || filterStatus !== "all" ? "Coba sesuaikan filtermu." : "Buat task pertamamu untuk memulai."}
               </p>
             </div>
           ) : (

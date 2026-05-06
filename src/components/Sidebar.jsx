@@ -73,7 +73,7 @@ function Sidebar() {
     }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    toast.success("Logged out. See you in the stars.");
+    toast.success("Berhasil keluar. Sampai jumpa!");
     navigate("/");
   };
 
@@ -114,7 +114,7 @@ function Sidebar() {
           <p className={`text-xs font-medium flex items-center gap-1.5 mt-0.5 ${
             isDark ? "text-zinc-500" : "text-slate-500"
           }`}>
-             <FiSettings className="w-3 h-3 group-hover:rotate-45 transition-transform duration-300" /> Account
+             <FiSettings className="w-3 h-3 group-hover:rotate-45 transition-transform duration-300" /> Akun
           </p>
         </div>
       </div>
@@ -124,13 +124,13 @@ function Sidebar() {
         <p className={`text-xs font-semibold uppercase tracking-wider mb-3 px-3 transition-colors ${
           isDark ? "text-zinc-600" : "text-slate-400"
         }`}>
-          Primary
+          Menu Utama
         </p>
         {[
-          { to: "/dashboard", icon: FiHome, label: "Overview" },
-          { to: "/my-task", icon: FiList, label: "Tasks" },
-          { to: "/priorities", icon: FiFlag, label: "Priorities" },
-          { to: "/calendar", icon: FiCalendar, label: "Calendar" },
+          { to: "/dashboard", icon: FiHome, label: "Beranda" },
+          { to: "/my-task", icon: FiList, label: "Task" },
+          { to: "/priorities", icon: FiFlag, label: "Prioritas" },
+          { to: "/calendar", icon: FiCalendar, label: "Kalender" },
           { to: "/pomodoro", icon: FiClock, label: "Pomodoro" },
         ].map((item) => (
           <div key={item.to}>
@@ -166,7 +166,7 @@ function Sidebar() {
           ) : (
             <FiMoon className="w-[18px] h-[18px] text-slate-400 group-hover:text-amber-500 transition-colors" />
           )}
-          <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+          <span>{isDark ? "Mode Terang" : "Mode Gelap"}</span>
         </button>
 
         {/* LOGOUT */}
@@ -180,7 +180,7 @@ function Sidebar() {
           } ${isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           <FiLogOut className="w-[18px] h-[18px] shrink-0 transition-all duration-300 group-hover:-translate-x-1" />
-          <span>{isLoggingOut ? "Logging Out..." : "Log Out"}</span>
+          <span>{isLoggingOut ? "Keluar..." : "Keluar"}</span>
         </button>
       </div>
     </aside>

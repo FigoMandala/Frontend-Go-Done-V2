@@ -133,9 +133,9 @@ function Register() {
         >
           <div className="flex flex-col mb-8">
             <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-800 tracking-tight mb-2">
-              Sign Up
+              Daftar
             </h1>
-            <p className="text-slate-500 font-medium">Create a new account to continue.</p>
+            <p className="text-slate-500 font-medium">Buat akun baru untuk melanjutkan.</p>
           </div>
 
           <div className="space-y-4">
@@ -148,7 +148,7 @@ function Register() {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  placeholder="First Name"
+                  placeholder="Nama Depan"
                   className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full text-sm"
                 />
               </div>
@@ -161,7 +161,7 @@ function Register() {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  placeholder="Last Name"
+                  placeholder="Nama Belakang"
                   className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full text-sm"
                 />
               </div>
@@ -188,7 +188,7 @@ function Register() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Enter Email"
+                placeholder="Masukkan Email"
                 className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full text-sm"
               />
             </div>
@@ -201,7 +201,7 @@ function Register() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Enter Password"
+                placeholder="Masukkan Password"
                 className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full text-sm"
               />
               <button
@@ -225,7 +225,7 @@ function Register() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Confirm Password"
+                placeholder="Konfirmasi Password"
                 className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full text-sm"
               />
               <button
@@ -248,13 +248,13 @@ function Register() {
               disabled={isLoading}
               className={`bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {isLoading ? "Registering..." : "Register"}
+              {isLoading ? "Mendaftar..." : "Daftar"}
             </button>
             
             <p className="mt-8 text-center text-slate-500 font-medium text-sm">
               Sudah punya akun?{" "}
               <Link to="/login" className="text-[#21569A] font-bold hover:text-[#163a68] hover:underline transition-colors">
-                Sign In
+                Masuk
               </Link>
             </p>
           </div>

@@ -12,10 +12,10 @@ const MAX_PHOTO_SIZE_MB = 4;
 const MAX_PHOTO_SIZE_BYTES = MAX_PHOTO_SIZE_MB * 1024 * 1024;
 
 const TABS = [
-  { id: 'profile', label: 'Profile', icon: FaUserAlt, color: 'indigo' },
-  { id: 'security', label: 'Security', icon: FiLock, color: 'emerald' },
-  { id: 'preferences', label: 'Preferences', icon: FiSettings, color: 'sky' },
-  { id: 'danger', label: 'Danger Zone', icon: FiAlertTriangle, color: 'rose' },
+  { id: 'profile', label: 'Profil', icon: FaUserAlt, color: 'indigo' },
+  { id: 'security', label: 'Keamanan', icon: FiLock, color: 'emerald' },
+  { id: 'preferences', label: 'Preferensi', icon: FiSettings, color: 'sky' },
+  { id: 'danger', label: 'Zona Bahaya', icon: FiAlertTriangle, color: 'rose' },
 ];
 
 function Account() {
@@ -139,18 +139,18 @@ function Account() {
       if (res.data.success) {
         localStorage.removeItem('token');
         setIsPopupError(false);
-        setPopupMessage('Your account has been deleted.');
+        setPopupMessage('Akunmu telah dihapus.');
         setShowSuccessPopup(true);
         setTimeout(() => navigate('/'), 1800);
       } else {
         setIsPopupError(true);
-        setPopupMessage(res.data.message || 'Failed to delete account!');
+        setPopupMessage(res.data.message || 'Gagal menghapus akun!');
         setShowSuccessPopup(true);
       }
     } catch (err) {
       console.log('DELETE ERROR:', err);
       setIsPopupError(true);
-      setPopupMessage('Failed to delete account!');
+      setPopupMessage('Gagal menghapus akun!');
       setShowSuccessPopup(true);
     } finally {
       setIsLoading(false);
@@ -195,13 +195,13 @@ function Account() {
       broadcastUserUpdate(updatedUser);
 
       setIsPopupError(false);
-      setPopupMessage('Profile updated successfully!');
+      setPopupMessage('Profil berhasil diperbarui!');
       setShowSuccessPopup(true);
       setIsEditingProfile(false);
     } catch (err) {
       console.log('Update error:', err);
       setIsPopupError(true);
-      setPopupMessage('Failed to update profile!');
+      setPopupMessage('Gagal memperbarui profil!');
       setShowSuccessPopup(true);
     } finally {
       setIsLoading(false);
@@ -262,12 +262,12 @@ function Account() {
       }));
 
       setIsPopupError(false);
-      setPopupMessage('Password updated successfully!');
+      setPopupMessage('Password berhasil diperbarui!');
       setShowSuccessPopup(true);
     } catch (err) {
       console.log('Update error:', err);
       setIsPopupError(true);
-      setPopupMessage('Failed to update password!');
+      setPopupMessage('Gagal memperbarui password!');
       setShowSuccessPopup(true);
     } finally {
       setIsLoading(false);
@@ -397,7 +397,7 @@ function Account() {
             {isPopupError ? <FiX className="h-10 w-10" /> : <FiCheck className="h-10 w-10" />}
           </div>
           <h2 className={`text-center text-2xl font-black tracking-tight ${headingClass}`}>
-            {isPopupError ? 'Something went wrong' : 'Action successful'}
+            {isPopupError ? 'Terjadi kesalahan' : 'Aksi berhasil'}
           </h2>
           <p className={`mt-3 text-center text-sm font-medium leading-relaxed ${helperClass}`}>
             {popupMessage}
@@ -408,7 +408,7 @@ function Account() {
               isPopupError ? 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-500/20' : 'bg-[#21569A] text-white hover:bg-[#1a4580] shadow-blue-500/20'
             }`}
           >
-            Got it, thanks
+            Mengerti, terima kasih
           </button>
         </div>
       </div>,
@@ -422,7 +422,7 @@ function Account() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-indigo-400' : 'text-[#21569A]'}`}>Interface</p>
-              <h2 className={`mt-1 text-2xl font-black tracking-tight ${headingClass}`}>Update Photo</h2>
+              <h2 className={`mt-1 text-2xl font-black tracking-tight ${headingClass}`}>Perbarui Foto</h2>
             </div>
             <button
               onClick={() => setShowPhotoModal(false)}
@@ -462,7 +462,7 @@ function Account() {
               }`}
             >
               <FiUpload className="w-4 h-4" />
-              <span>Upload New Picture</span>
+              <span>Upload Foto Baru</span>
             </button>
 
             {user.photo_url && (
@@ -478,12 +478,12 @@ function Account() {
                 }`}
               >
                 <FiTrash2 className="w-4 h-4 transition-transform group-hover:scale-110" />
-                <span>Remove Current</span>
+                <span>Hapus Foto</span>
               </button>
             )}
 
             <p className={`text-center text-[10px] font-medium tracking-wide mt-4 uppercase ${helperClass}`}>
-              Resolution recommendation: 400x400px • MAX {MAX_PHOTO_SIZE_MB}MB
+              Rekomendasi resolusi: 400x400px • MAKS {MAX_PHOTO_SIZE_MB}MB
             </p>
           </div>
         </div>
@@ -498,7 +498,7 @@ function Account() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-indigo-400' : 'text-[#21569A]'}`}>Adjustment</p>
-              <h2 className={`mt-1 text-2xl font-black tracking-tight ${headingClass}`}>Crop Photo</h2>
+              <h2 className={`mt-1 text-2xl font-black tracking-tight ${headingClass}`}>Pangkas Foto</h2>
             </div>
             <button
               onClick={() => { setShowCropModal(false); setPreviewUrl(null); }}
@@ -524,7 +524,7 @@ function Account() {
 
           <div className={`mt-8 p-6 rounded-3xl border ${isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-slate-50 border-slate-200'}`}>
             <div className="flex items-center justify-between mb-4">
-              <span className={`text-xs font-bold uppercase tracking-wider ${helperClass}`}>Zoom Level</span>
+              <span className={`text-xs font-bold uppercase tracking-wider ${helperClass}`}>Tingkat Zoom</span>
               <span className={`text-xs font-black px-3 py-1 rounded-full ${isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-[#21569A]/10 text-[#21569A]'}`}>
                 {zoom.toFixed(1)}x
               </span>
@@ -570,7 +570,7 @@ function Account() {
                 isDark ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              Cancel
+              Batal
             </button>
             <button
               onClick={handleCropComplete}
@@ -578,7 +578,7 @@ function Account() {
                 isDark ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/20' : 'bg-[#21569A] hover:bg-[#1a4580] shadow-blue-500/20'
               }`}
             >
-              Apply Crop
+              Terapkan Pangkasan
             </button>
           </div>
         </div>
@@ -594,19 +594,19 @@ function Account() {
             <div className="absolute inset-0 rounded-full animate-ping bg-rose-500/5"></div>
             <FiTrash2 className="h-10 w-10 relative z-10" />
           </div>
-          <h2 className={`text-center text-2xl font-black tracking-tight ${headingClass}`}>Delete Account?</h2>
+          <h2 className={`text-center text-2xl font-black tracking-tight ${headingClass}`}>Hapus Akun?</h2>
           <p className={`mt-4 text-center text-sm font-medium leading-relaxed ${helperClass}`}>
-            All your data, tasks, and settings will be permanently erased. This action is irreversible.
+            Semua data, task, dan pengaturan kamu akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
           </p>
           <div className="mt-8">
-            <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Current Password</label>
+            <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Password Saat Ini</label>
             <div className="relative">
               <input
                 type={showPass.current ? 'text' : 'password'}
                 value={formData.currentPassword}
                 onChange={(e) => setFormData((prev) => ({ ...prev, currentPassword: e.target.value }))}
                 className={fieldClass}
-                placeholder="Enter your current password"
+                placeholder="Masukkan password saat ini"
               />
               <button type="button" onClick={() => togglePass('current')} className={`absolute right-4 top-1/2 -translate-y-1/2 ${helperClass}`}>
                 {showPass.current ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -620,14 +620,14 @@ function Account() {
                 isDark ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
-              Keep Account
+              Simpan Akun
             </button>
             <button
               onClick={confirmDeleteAccount}
               disabled={isLoading}
               className={`rounded-2xl px-4 py-4 font-bold text-sm text-white transition-all bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/20 active:scale-95 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {isLoading ? "Deleting..." : "Delete Forever"}
+              {isLoading ? "Menghapus..." : "Hapus Selamanya"}
             </button>
           </div>
         </div>
@@ -642,9 +642,9 @@ function Account() {
           <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-lg">
             <FiTrash2 className="h-8 w-8" />
           </div>
-          <h2 className={`text-center text-2xl font-black tracking-tight ${headingClass}`}>Remove Photo?</h2>
+          <h2 className={`text-center text-2xl font-black tracking-tight ${headingClass}`}>Hapus Foto?</h2>
           <p className={`mt-4 text-center text-sm font-medium leading-relaxed ${helperClass}`}>
-            You'll reset to your default profile initials.
+            Kamu akan kembali ke inisial profil default.
           </p>
           <div className="mt-10 grid grid-cols-2 gap-4">
             <button
@@ -653,13 +653,13 @@ function Account() {
                 isDark ? 'border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
-              Cancel
+              Batal
             </button>
             <button
               onClick={confirmDeletePhoto}
               className="rounded-2xl px-4 py-4 font-bold text-sm text-white transition-all bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/20 active:scale-95"
             >
-              Remove
+              Hapus
             </button>
           </div>
         </div>
@@ -697,8 +697,8 @@ function Account() {
             <FaUserAlt className="w-4 h-4" />
           </div>
           <div className="flex-1">
-            <h3 className={`font-bold text-sm ${headingClass}`}>Personal Information</h3>
-            <p className={`text-[11px] ${helperClass}`}>Manage your name and email</p>
+            <h3 className={`font-bold text-sm ${headingClass}`}>Informasi Pribadi</h3>
+            <p className={`text-[11px] ${helperClass}`}>Kelola nama dan emailmu</p>
           </div>
           {!isEditingProfile && (
             <button
@@ -707,7 +707,7 @@ function Account() {
                 isDark ? 'border-zinc-700 text-zinc-400 hover:text-indigo-400 hover:border-indigo-500/30' : 'border-slate-200 text-slate-500 hover:text-[#21569A] hover:border-blue-200'
               }`}
             >
-              <FiEdit3 className="w-3 h-3" /> Edit Profile
+              <FiEdit3 className="w-3 h-3" /> Edit Profil
             </button>
           )}
         </div>
@@ -717,16 +717,16 @@ function Account() {
           <div className="space-y-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>First Name</label>
+                <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Nama Depan</label>
                 <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className={fieldClass} />
               </div>
               <div>
-                <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Last Name</label>
+                <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Nama Belakang</label>
                 <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className={fieldClass} />
               </div>
             </div>
             <div>
-              <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Email Address</label>
+              <label className={`mb-2 block text-xs font-semibold ${labelClass}`}>Alamat Email</label>
               <div className="relative">
                 <FaEnvelope className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${helperClass}`} />
                 <input type="email" name="email" value={formData.email} onChange={handleChange} className={`${fieldClass} pl-11`} />
@@ -741,7 +741,7 @@ function Account() {
                 disabled={isLoading}
                 className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-xs text-white transition-all shadow-sm active:scale-95 ${isDark ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/15' : 'bg-[#21569A] hover:bg-[#1a4580] shadow-blue-500/15'} ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <FiCheck className="w-3.5 h-3.5" /> {isLoading ? "Saving..." : "Save Changes"}
+                <FiCheck className="w-3.5 h-3.5" /> {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
               </button>
               <button
                 type="button"
@@ -756,7 +756,7 @@ function Account() {
                 }}
                 className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 font-bold text-xs transition-colors active:scale-95 ${isDark ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-slate-200 text-slate-600 hover:bg-slate-100'}`}
               >
-                <FiX className="w-3.5 h-3.5" /> Cancel
+                <FiX className="w-3.5 h-3.5" /> Batal
               </button>
             </div>
           </div>
@@ -764,11 +764,11 @@ function Account() {
           /* View Mode */
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className={`rounded-2xl border p-4 transition-all hover:shadow-md group ${cardBgClass}`}>
-              <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>First Name</p>
+              <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>Nama Depan</p>
               <p className={`text-sm font-bold group-hover:text-indigo-500 transition-colors ${headingClass}`}>{user.first_name || '—'}</p>
             </div>
             <div className={`rounded-2xl border p-4 transition-all hover:shadow-md group ${cardBgClass}`}>
-              <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>Last Name</p>
+              <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${isDark ? 'text-zinc-500' : 'text-slate-400'}`}>Nama Belakang</p>
               <p className={`text-sm font-bold group-hover:text-indigo-500 transition-colors ${headingClass}`}>{user.last_name || '—'}</p>
             </div>
             <div className={`rounded-2xl border p-4 transition-all hover:shadow-md group sm:col-span-2 ${cardBgClass}`}>
@@ -810,7 +810,7 @@ function Account() {
           </div>
           <div className="space-y-1">
             <p className={`text-sm font-bold ${headingClass}`}>{user.first_name} {user.last_name}</p>
-            <p className={`text-xs ${helperClass}`}>{user.email || 'No email set'}</p>
+            <p className={`text-xs ${helperClass}`}>{user.email || 'Email belum diatur'}</p>
             <p className={`text-[11px] font-semibold ${helperClass}`}>Klik tombol di bawah untuk ganti foto, bukan avatar header.</p>
             <div className="pt-2 flex flex-wrap gap-2">
               <button
@@ -847,17 +847,17 @@ function Account() {
             <FiShield className="w-4 h-4" />
           </div>
           <div className="flex-1">
-            <h3 className={`font-bold text-sm ${headingClass}`}>Password</h3>
-            <p className={`text-[11px] ${helperClass}`}>Update credentials</p>
+            <h3 className={`font-bold text-sm ${headingClass}`}>Kata Sandi</h3>
+            <p className={`text-[11px] ${helperClass}`}>Perbarui kredensial</p>
           </div>
         </div>
 
         <div className="space-y-4 flex-1">
-          {renderPasswordField('Current Password', 'currentPassword', 'current')}
+          {renderPasswordField('Password Saat Ini', 'currentPassword', 'current')}
           <div className={`border-t my-2 ${isDark ? 'border-zinc-800' : 'border-slate-100'}`}></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {renderPasswordField('New Password', 'newPassword', 'new')}
-            {renderPasswordField('Confirm New', 'confirmPassword', 'confirm')}
+            {renderPasswordField('Password Baru', 'newPassword', 'new')}
+            {renderPasswordField('Konfirmasi Password', 'confirmPassword', 'confirm')}
           </div>
         </div>
 
@@ -867,26 +867,26 @@ function Account() {
             onClick={handleSavePassword}
             className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-xs text-white transition-all shadow-sm active:scale-95 ${isDark ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/15' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/15'}`}
           >
-            <FiLock className="w-3.5 h-3.5" /> Update
+            <FiLock className="w-3.5 h-3.5" /> Perbarui
           </button>
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }))}
             className={`flex items-center gap-2 rounded-2xl border px-5 py-2.5 font-bold text-xs transition-colors active:scale-95 ${isDark ? 'border-zinc-700 text-zinc-300 hover:bg-zinc-800' : 'border-slate-200 text-slate-600 hover:bg-slate-100'}`}
           >
-            Clear
+            Hapus
           </button>
         </div>
       </div>
 
       {/* Security Tips */}
       <div className={`rounded-3xl border p-5 backdrop-blur-xl h-full flex flex-col ${panelClass}`}>
-        <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-5 p-1 px-3 rounded-lg w-fit ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>Security Best Practices</h4>
+        <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-5 p-1 px-3 rounded-lg w-fit ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>Praktik Keamanan Terbaik</h4>
         <ul className="space-y-4 flex-1">
           {[
-            'Use at least 8 characters with a mix of letters, numbers, and symbols',
-            'Don\'t reuse passwords from other sites like Social Media',
-            'Change your password regularly for better account security',
+            'Gunakan minimal 8 karakter dengan kombinasi huruf, angka, dan simbol',
+            'Jangan gunakan ulang password dari situs lain seperti Media Sosial',
+            'Ganti passwordmu secara rutin untuk keamanan akun yang lebih baik',
           ].map((tip, i) => (
             <li key={i} className="flex items-start gap-4">
               <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-black shadow-sm ${isDark ? 'bg-zinc-800 text-emerald-400 border border-zinc-700' : 'bg-white text-emerald-600 border border-emerald-100'}`}>{i + 1}</span>
@@ -906,8 +906,8 @@ function Account() {
             <FaBell className="w-4 h-4" />
           </div>
           <div className="flex-1">
-            <h3 className={`font-bold text-sm ${headingClass}`}>Notifications</h3>
-            <p className={`text-[11px] ${helperClass}`}>Manage alerts and reminders</p>
+            <h3 className={`font-bold text-sm ${headingClass}`}>Notifikasi</h3>
+            <p className={`text-[11px] ${helperClass}`}>Kelola peringatan dan pengingat</p>
           </div>
         </div>
 
@@ -919,8 +919,8 @@ function Account() {
                 <FaBell className="w-4 h-4" />
               </div>
               <div>
-                <p className={`text-xs font-bold ${headingClass}`}>Push Notifications</p>
-                <p className={`text-[10px] ${helperClass}`}>Daily reminders & tasks</p>
+                <p className={`text-xs font-bold ${headingClass}`}>Notifikasi Push</p>
+                <p className={`text-[10px] ${helperClass}`}>Pengingat harian & task</p>
               </div>
             </div>
             <button
@@ -943,12 +943,12 @@ function Account() {
 
       {/* App Info */}
       <div className={`rounded-3xl border p-5 backdrop-blur-xl h-full flex flex-col ${panelClass}`}>
-        <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 p-1 px-3 rounded-lg w-fit ${isDark ? 'bg-sky-500/10 text-sky-400' : 'bg-sky-50 text-sky-600'}`}>App Metadata</h4>
+        <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 p-1 px-3 rounded-lg w-fit ${isDark ? 'bg-sky-500/10 text-sky-400' : 'bg-sky-50 text-sky-600'}`}>Metadata Aplikasi</h4>
         <div className="space-y-2.5 flex-1">
           {[
-            { label: 'Version', value: '1.0.0' },
-            { label: 'System Theme', value: isDark ? 'OLED Dark' : 'Glass Light' },
-            { label: 'Unique ID', value: `${profileInitials}-${user.id || 'GO1'}` },
+            { label: 'Versi', value: '1.0.0' },
+            { label: 'Tema Sistem', value: isDark ? 'OLED Dark' : 'Glass Light' },
+            { label: 'ID Unik', value: `${profileInitials}-${user.id || 'GO1'}` },
           ].map((item, i) => (
             <div key={i} className={`flex items-center justify-between rounded-xl p-3 border ${isDark ? 'bg-zinc-800/40 border-zinc-700/50' : 'bg-slate-50/80 border-slate-100'}`}>
               <span className={`text-[10px] font-bold uppercase tracking-wider ${helperClass}`}>{item.label}</span>
@@ -968,14 +968,14 @@ function Account() {
             <FiAlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <h3 className={`font-bold text-sm ${headingClass}`}>Delete Account</h3>
-            <p className={`text-xs ${isDark ? 'text-rose-400/60' : 'text-rose-500'}`}>Permanently delete your account and all data</p>
+            <h3 className={`font-bold text-sm ${headingClass}`}>Hapus Akun</h3>
+            <p className={`text-xs ${isDark ? 'text-rose-400/60' : 'text-rose-500'}`}>Hapus akun dan semua data secara permanen</p>
           </div>
         </div>
 
         <div className={`rounded-2xl border p-5 mb-6 ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-white/80 border-slate-200'}`}>
           <p className={`text-sm font-medium leading-relaxed ${helperClass}`}>
-            Once you delete your account, there's no going back. All of your data including tasks, categories, preferences, and profile information will be permanently removed. Please be certain.
+            Setelah kamu menghapus akun, tidak ada jalan kembali. Semua data termasuk task, kategori, preferensi, dan informasi profil akan dihapus secara permanen. Harap yakin sebelum melanjutkan.
           </p>
         </div>
 
@@ -983,11 +983,11 @@ function Account() {
           <div className="flex items-start gap-3">
             <FiAlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
             <div>
-              <p className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>What will be deleted:</p>
+              <p className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Yang akan dihapus:</p>
               <ul className={`mt-2 space-y-1 text-xs ${isDark ? 'text-amber-400/70' : 'text-amber-600'}`}>
-                <li>• All tasks and categories</li>
-                <li>• Profile data and photos</li>
-                <li>• All preferences and settings</li>
+                <li>• Semua task dan kategori</li>
+                <li>• Data profil dan foto</li>
+                <li>• Semua preferensi dan pengaturan</li>
               </ul>
             </div>
           </div>
@@ -998,7 +998,7 @@ function Account() {
           className="flex w-full items-center justify-center gap-3 rounded-2xl py-4 font-bold text-sm text-white transition-all bg-rose-500 hover:bg-rose-600 shadow-xl shadow-rose-500/20 active:scale-95"
         >
           <FiTrash2 className="w-4 h-4" />
-          <span>Delete My Account</span>
+          <span>Hapus Akunmu</span>
         </button>
       </div>
     </div>
@@ -1034,7 +1034,7 @@ function Account() {
                 }`}
               >
                 <FaArrowLeft className="w-2.5 h-2.5 transition-transform group-hover:-translate-x-0.5" />
-                <span>Back</span>
+                <span>Kembali</span>
               </button>
             </div>
 

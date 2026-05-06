@@ -54,11 +54,11 @@ function Login() {
       if (err.response?.data?.message) {
         toast.error(err.response.data.message);
       } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
-        toast.error("Lagi Tidak Terhubung Ke server coba lagi 😀");
+        toast.error("Tidak terhubung ke server, coba lagi 😀");
       } else if (err.code === "ECONNABORTED") {
-        toast.error("❌ Request timeout - server tidak response");
+        toast.error("❌ Request timeout - server tidak merespon");
       } else {
-        toast.error("❌ Error: " + (err.message || "Unknown error"));
+        toast.error("❌ Error: " + (err.message || "Terjadi kesalahan"));
       }
     } finally {
       setIsLoading(false);
@@ -79,9 +79,9 @@ function Login() {
         <form onSubmit={handleSubmit} className="w-full lg:w-[45%] flex flex-col justify-center px-8 sm:px-12 lg:px-14 py-12 z-10 bg-white/40">
           <div className="flex flex-col mb-10">
             <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-800 tracking-tight mb-2">
-              Sign In
+              Masuk
             </h1>
-            <p className="text-slate-500 font-medium">Hello there! Please enter your details.</p>
+            <p className="text-slate-500 font-medium">Halo! Silakan masukkan detail akunmu.</p>
           </div>
 
           <div className="space-y-5">
@@ -102,7 +102,7 @@ function Login() {
               <FaLock className="text-slate-400 group-focus-within:text-[#21569A] mr-3.5 transition-colors text-lg" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter Password"
+                placeholder="Masukkan Password"
                 className="flex-1 outline-none text-slate-700 bg-transparent placeholder-slate-400 font-medium w-full"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -124,13 +124,13 @@ function Login() {
               disabled={isLoading}
               className={`bg-[#21569A] text-white px-6 py-4 rounded-2xl font-bold shadow-lg shadow-[#21569A]/30 hover:bg-[#1B4B59] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex justify-center items-center w-full ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {isLoading ? "Signing In..." : "Sign In"}
+              {isLoading ? "Masuk..." : "Masuk"}
             </button>
 
             <p className="mt-8 text-center text-slate-500 font-medium text-sm">
               Belum punya akun?{" "}
               <Link to="/register" className="text-[#21569A] font-bold hover:text-[#163a68] hover:underline transition-colors">
-                Register
+                Daftar
               </Link>
             </p>
           </div>

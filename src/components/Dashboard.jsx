@@ -113,10 +113,10 @@ function Dashboard() {
 
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour >= 4 && hour < 11) setGreeting("Good Morning");
-    else if (hour >= 11 && hour < 15) setGreeting("Good Afternoon");
-    else if (hour >= 15 && hour < 19) setGreeting("Good Evening");
-    else setGreeting("Good Night");
+    if (hour >= 4 && hour < 11) setGreeting("Selamat Pagi");
+    else if (hour >= 11 && hour < 15) setGreeting("Selamat Siang");
+    else if (hour >= 15 && hour < 19) setGreeting("Selamat Sore");
+    else setGreeting("Selamat Malam");
   }, []);
 
   const getDaysUntilDeadline = (deadline) => {
@@ -130,13 +130,13 @@ function Dashboard() {
 
   const formatDeadlineText = (deadline) => {
     const days = getDaysUntilDeadline(deadline);
-    if (days === null) return "No deadline";
-    if (days < 0) return "Overdue";
-    if (days === 0) return "Today";
-    if (days === 1) return "Tomorrow";
-    if (days <= 7) return `${days} days left`;
+    if (days === null) return "Tanpa deadline";
+    if (days < 0) return "Terlambat";
+    if (days === 0) return "Hari ini";
+    if (days === 1) return "Besok";
+    if (days <= 7) return `${days} hari lagi`;
     const [year, month, day] = deadline.split("-").map(Number);
-    return new Date(year, month - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return new Date(year, month - 1, day).toLocaleDateString("id-ID", { month: "short", day: "numeric" });
   };
 
   const todayTasks = tasks.filter((t) => getDaysUntilDeadline(t.deadline) === 0 && t.status !== "Done");
@@ -184,10 +184,10 @@ function Dashboard() {
       await backend.put(`/tasks/${taskId}`, { status: "completed" });
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
       setCompletedTodayCount((c) => c + 1);
-      setPopupMessage("Task marked as completed.");
+      setPopupMessage("Task berhasil diselesaikan.");
       setShowSuccessPopup(true);
     } catch {
-      setErrorMessage("Failed to complete task.");
+      setErrorMessage("Gagal menyelesaikan task.");
       setShowErrorPopup(true);
     } finally {
       setIsRequestPending(false);
@@ -203,7 +203,7 @@ function Dashboard() {
       setShowDeletePopup(false);
       setDeleteTaskId(null);
     } catch {
-      setErrorMessage("Failed to delete task.");
+      setErrorMessage("Gagal menghapus task.");
       setShowErrorPopup(true);
     } finally {
       setIsRequestPending(false);
@@ -236,13 +236,13 @@ function Dashboard() {
           <div className="relative z-10 grid grid-cols-1 xl:grid-cols-12 items-center gap-6 xl:gap-8">
             <div className="xl:col-span-8 max-w-[650px]">
               <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>
-                Productivity Hub
+                Pusat Produktivitas
               </p>
               <h1 className={`text-3xl md:text-4xl font-extrabold mt-2 leading-tight tracking-tight ${headingClass}`}>
                 {greeting}, {user?.first_name || "User"}
               </h1>
               <p className={`mt-2.5 max-w-lg text-sm md:text-[15px] font-medium leading-relaxed ${subtleTextClass}`}>
-                Keep your day on track with your personal command center.
+                Kelola harimu dengan pusat kendali pribadimu.
               </p>
             </div>
 
@@ -279,10 +279,10 @@ function Dashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className={`text-[11px] font-bold uppercase tracking-widest ${subtleTextClass}`}>
-                    Daily Goal
+                    Target Harian
                   </p>
                   <p className={`text-sm font-semibold mt-0.5 ${headingClass}`}>
-                    {completedTodayCount} tasks sorted
+                    {completedTodayCount} task selesai
                   </p>
                 </div>
               </div>
@@ -301,10 +301,10 @@ function Dashboard() {
                 <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-indigo-500/10 text-indigo-400" : "bg-blue-50 text-blue-600"}`}>
                   <FiTarget className="w-5 h-5" />
                 </div>
-                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Focus Area</h2>
+                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Area Fokus</h2>
               </div>
               <span className={`text-xs px-3 py-1.5 rounded-lg font-semibold border ${isDark ? "border-indigo-500/20 text-indigo-300 bg-indigo-500/10" : "border-slate-200 text-slate-500 bg-slate-50"}`}>
-                {todayTasks.length} Active
+                {todayTasks.length} Aktif
               </span>
             </div>
 
@@ -363,14 +363,14 @@ function Dashboard() {
               <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-amber-500/10 text-amber-400" : "bg-amber-50 text-amber-600"}`}>
                 <FiActivity className="w-5 h-5" />
               </div>
-              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Priority Radar</h2>
+              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Radar Prioritas</h2>
             </div>
 
             <div className="space-y-3 flex-1 flex flex-col justify-center">
               {[
-                { label: "High", count: stats.high, dot: "bg-rose-500", ring: "ring-rose-500/20" },
-                { label: "Medium", count: stats.medium, dot: "bg-amber-500", ring: "ring-amber-500/20" },
-                { label: "Low", count: stats.low, dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
+                { label: "Tinggi", count: stats.high, dot: "bg-rose-500", ring: "ring-rose-500/20" },
+                { label: "Sedang", count: stats.medium, dot: "bg-amber-500", ring: "ring-amber-500/20" },
+                { label: "Rendah", count: stats.low, dot: "bg-emerald-500", ring: "ring-emerald-500/20" },
               ].map((item, idx) => (
                 <div
                   key={item.label}
@@ -399,7 +399,7 @@ function Dashboard() {
                 <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-600"}`}>
                   <FiCalendar className="w-5 h-5" />
                 </div>
-                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Upcoming</h2>
+                <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Akan Datang</h2>
               </div>
             </div>
 
@@ -452,7 +452,7 @@ function Dashboard() {
               <div className={`p-2 rounded-xl transition-colors ${isDark ? "bg-rose-500/10 text-rose-400" : "bg-rose-50 text-rose-600"}`}>
                 <FiAlertTriangle className="w-5 h-5" />
               </div>
-              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Overdue</h2>
+              <h2 className={`text-[1.15rem] font-bold tracking-tight ${headingClass}`}>Terlambat</h2>
             </div>
 
             <div className="space-y-3 flex-1 flex flex-col">
@@ -477,7 +477,7 @@ function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold truncate ${isDark ? "text-rose-200" : "text-rose-800"}`}>{task.title}</p>
                     <p className={`text-xs mt-0.5 font-bold uppercase tracking-widest ${isDark ? "text-rose-400" : "text-rose-500"}`}>
-                      {getDaysUntilDeadline(task.deadline) * -1} days late
+                      {getDaysUntilDeadline(task.deadline) * -1} hari terlambat
                     </p>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -535,7 +535,7 @@ function Dashboard() {
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
               <FiCheckCircle className="w-8 h-8 text-emerald-500" />
             </div>
-            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Mark as Done?</h3>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Tandai Selesai?</h3>
             <p className={`text-sm mb-7 ${subtleTextClass}`}>Task ini akan ditandai sebagai selesai.</p>
             <div className="flex gap-3">
               <button
@@ -546,14 +546,14 @@ function Dashboard() {
                     : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                Cancel
+                Batal
               </button>
               <button
                 onClick={handleFinishTask}
                 disabled={isRequestPending}
                 className={`flex-1 py-3 rounded-xl text-white font-semibold ${isDark ? "bg-emerald-600 hover:bg-emerald-700" : "bg-emerald-500 hover:bg-emerald-600"} ${isRequestPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                {isRequestPending ? "Processing..." : "Yes, Complete"}
+                {isRequestPending ? "Memproses..." : "Ya, Selesaikan"}
               </button>
             </div>
           </div>
@@ -567,7 +567,7 @@ function Dashboard() {
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-rose-500/10" : "bg-rose-100"}`}>
               <FiTrash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Delete Task?</h3>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Hapus Task?</h3>
             <p className={`text-sm mb-7 ${subtleTextClass}`}>Task akan dihapus permanen dari daftar.</p>
             <div className="flex gap-3">
               <button
@@ -578,14 +578,14 @@ function Dashboard() {
                     : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
                 }`}
               >
-                Cancel
+                Batal
               </button>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={isRequestPending}
                 className={`flex-1 py-3 rounded-xl bg-rose-500 text-white font-semibold hover:bg-rose-600 ${isRequestPending ? "opacity-50 cursor-not-allowed" : ""}`}
               >
-                {isRequestPending ? "Deleting..." : "Delete"}
+                {isRequestPending ? "Menghapus..." : "Hapus"}
               </button>
             </div>
           </div>
@@ -599,7 +599,7 @@ function Dashboard() {
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 ${isDark ? "bg-emerald-500/10" : "bg-emerald-100"}`}>
               <FiCheck className="w-8 h-8 text-emerald-500" />
             </div>
-            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Task Completed</h3>
+            <h3 className={`text-xl font-black mb-2 ${headingClass}`}>Task Selesai</h3>
             <p className={`text-sm mb-7 ${subtleTextClass}`}>{popupMessage}</p>
             <button
               onClick={() => setShowSuccessPopup(false)}
@@ -630,7 +630,7 @@ function Dashboard() {
                   : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
               }`}
             >
-              Close
+              Tutup
             </button>
           </div>
         </div>,
