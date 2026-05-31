@@ -13,7 +13,6 @@ const backend = axios.create({
   timeout: REQUEST_TIMEOUT_MS,
 });
 
-// Inject Authorization header
 backend.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
