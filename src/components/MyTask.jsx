@@ -340,6 +340,10 @@ function MyTask() {
   const panelClass = isDark ? "bg-zinc-900/40 border-zinc-800/80 shadow-md shadow-black/10" : "bg-white/90 border-slate-200/60 shadow-sm shadow-slate-200/50";
   const headingClass = isDark ? "text-zinc-50" : "text-slate-900";
   const subtleClass = isDark ? "text-zinc-400" : "text-slate-500";
+  const filterSelectClass = isDark
+    ? "bg-zinc-900 border-zinc-700 text-zinc-100 [color-scheme:dark]"
+    : "bg-white border-slate-200 text-slate-700 [color-scheme:light]";
+  const filterOptionClass = isDark ? "bg-zinc-900 text-zinc-100" : "bg-white text-slate-900";
 
   const priorityDot = (p) => {
     switch ((p || "").toLowerCase()) {
@@ -493,26 +497,22 @@ function MyTask() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className={`px-4 py-2.5 rounded-2xl border text-sm font-medium transition-colors cursor-pointer outline-none ${
-                isDark ? "bg-zinc-900/40 border-zinc-800/80 text-zinc-300" : "bg-white/90 border-slate-200/60 text-slate-700"
-              }`}
+              className={`px-4 py-2.5 rounded-2xl border text-sm font-medium transition-colors cursor-pointer outline-none ${filterSelectClass}`}
             >
-              <option value="all">Semua Prioritas</option>
-              <option value="high">Tinggi</option>
-              <option value="medium">Sedang</option>
-              <option value="low">Rendah</option>
+              <option className={filterOptionClass} value="all">Semua Prioritas</option>
+              <option className={filterOptionClass} value="high">Tinggi</option>
+              <option className={filterOptionClass} value="medium">Sedang</option>
+              <option className={filterOptionClass} value="low">Rendah</option>
             </select>
             {/* Status Filter */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className={`px-4 py-2.5 rounded-2xl border text-sm font-medium transition-colors cursor-pointer outline-none ${
-                isDark ? "bg-zinc-900/40 border-zinc-800/80 text-zinc-300" : "bg-white/90 border-slate-200/60 text-slate-700"
-              }`}
+              className={`px-4 py-2.5 rounded-2xl border text-sm font-medium transition-colors cursor-pointer outline-none ${filterSelectClass}`}
             >
-              <option value="all">Semua Status</option>
-              <option value="active">Aktif</option>
-              <option value="done">Selesai</option>
+              <option className={filterOptionClass} value="all">Semua Status</option>
+              <option className={filterOptionClass} value="active">Aktif</option>
+              <option className={filterOptionClass} value="done">Selesai</option>
             </select>
           </div>
         </div>

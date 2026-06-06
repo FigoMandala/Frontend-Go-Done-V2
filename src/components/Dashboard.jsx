@@ -32,7 +32,6 @@ function Dashboard() {
   const [completeTaskId, setCompleteTaskId] = useState(null);
   const [isRequestPending, setIsRequestPending] = useState(false);
 
-  const [completedTodayCount, setCompletedTodayCount] = useState(0);
   const [theme, setTheme] = useState(localStorage.getItem("dashboardTheme") || "light");
 
   const isDark = theme === "dark";
@@ -90,7 +89,6 @@ function Dashboard() {
 
         setTasks(parsed);
         setCategories(catsRes.data.map((c) => ({ value: c.category_id, label: c.category_name })));
-        setCompletedTodayCount(0);
       } catch (e) {
         console.error("Error fetching", e);
       } finally {
@@ -140,6 +138,8 @@ function Dashboard() {
   };
 
   const todayTasks = tasks.filter((t) => getDaysUntilDeadline(t.deadline) === 0 && t.status !== "Done");
+  const completedTodayCount = tasks.filter((t) => getDaysUntilDeadline(t.deadline) === 0 && t.status === "Done").length;
+  const todayTaskTotal = todayTasks.length + completedTodayCount;
 
   const upcomingTasks = tasks
     .filter((t) => {
@@ -164,9 +164,8 @@ function Dashboard() {
   };
 
   const computeProgress = () => {
-    const initialToday = todayTasks.length + completedTodayCount;
-    if (initialToday === 0) return 100;
-    return Math.round((completedTodayCount / initialToday) * 100);
+    if (todayTaskTotal === 0) return 0;
+    return Math.round((completedTodayCount / todayTaskTotal) * 100);
   };
 
   const requestFinishTask = (taskId) => {
@@ -183,7 +182,6 @@ function Dashboard() {
     try {
       await backend.put(`/tasks/${taskId}`, { status: "completed" });
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
-      setCompletedTodayCount((c) => c + 1);
       setPopupMessage("Task berhasil diselesaikan.");
       setShowSuccessPopup(true);
     } catch {
@@ -282,7 +280,7 @@ function Dashboard() {
                     Target Harian
                   </p>
                   <p className={`text-sm font-semibold mt-0.5 ${headingClass}`}>
-                    {completedTodayCount} task selesai
+                    {completedTodayCount}/{todayTaskTotal} task selesai
                   </p>
                 </div>
               </div>
@@ -312,6 +310,14 @@ function Dashboard() {
               <div className="animate-pulse space-y-4">
                 <div className={`h-16 rounded-2xl ${isDark ? "bg-zinc-800/50" : "bg-slate-100"}`}></div>
                 <div className={`h-16 rounded-2xl w-4/5 ${isDark ? "bg-zinc-800/50" : "bg-slate-100"}`}></div>
+              </div>
+            ) : todayTaskTotal === 0 ? (
+              <div className={`flex-1 rounded-2xl border border-dashed flex flex-col items-center justify-center p-8 text-center ${isDark ? "border-zinc-700 bg-zinc-900/30" : "border-slate-200 bg-slate-50/50"}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${isDark ? "bg-indigo-500/10" : "bg-blue-100"}`}>
+                   <FiTarget className="w-6 h-6 text-indigo-500" />
+                </div>
+                <h3 className={`text-[1rem] font-semibold ${headingClass}`}>Belum ada task hari ini</h3>
+                <p className={`mt-1 text-sm ${subtleTextClass}`}>Tambahkan task dengan deadline hari ini untuk mulai mengejar target.</p>
               </div>
             ) : todayTasks.length === 0 ? (
               <div className={`flex-1 rounded-2xl border border-dashed flex flex-col items-center justify-center p-8 text-center ${isDark ? "border-zinc-700 bg-zinc-900/30" : "border-slate-200 bg-slate-50/50"}`}>

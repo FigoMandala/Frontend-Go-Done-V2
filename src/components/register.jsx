@@ -5,7 +5,56 @@ import toast, { Toaster } from "react-hot-toast";
 import illustration from "../assets/Registrasi.svg";
 import { FaUser, FaLock, FaRegUser } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
+
+const PASSWORD_RULES = [
+  { id: "length", label: "Minimal 8 karakter", test: (value) => value.length >= 8 },
+  { id: "letter", label: "Ada huruf", test: (value) => /[A-Za-z]/.test(value) },
+  { id: "number", label: "Ada angka", test: (value) => /[0-9]/.test(value) },
+  { id: "symbol", label: "Ada simbol", test: (value) => /[^A-Za-z0-9]/.test(value) },
+];
+
+const getPasswordStrength = (password) => {
+  const passed = PASSWORD_RULES.filter((rule) => rule.test(password)).length;
+
+  if (!password) {
+    return {
+      passed,
+      label: "Belum diisi",
+      width: "0%",
+      barClass: "bg-slate-200",
+      textClass: "text-slate-400",
+    };
+  }
+
+  if (passed <= 2) {
+    return {
+      passed,
+      label: "Lemah",
+      width: "33%",
+      barClass: "bg-rose-500",
+      textClass: "text-rose-500",
+    };
+  }
+
+  if (passed === 3) {
+    return {
+      passed,
+      label: "Sedang",
+      width: "66%",
+      barClass: "bg-amber-500",
+      textClass: "text-amber-500",
+    };
+  }
+
+  return {
+    passed,
+    label: password.length >= 12 ? "Sangat kuat" : "Kuat",
+    width: "100%",
+    barClass: "bg-emerald-500",
+    textClass: "text-emerald-600",
+  };
+};
 
 function Register() {
   const navigate = useNavigate();
@@ -20,6 +69,8 @@ function Register() {
     password: "",
     confirmPassword: "",
   });
+  const passwordStrength = getPasswordStrength(formData.password);
+  const isPasswordValid = passwordStrength.passed === PASSWORD_RULES.length;
 
   const handleChange = (e) => {
     setFormData({
@@ -45,8 +96,8 @@ function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password minimal 6 karakter!");
+    if (!isPasswordValid) {
+      toast.error("Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.");
       return;
     }
 
@@ -215,6 +266,32 @@ function Register() {
                   <FiEye className="text-slate-400 hover:text-slate-600 transition-colors w-5 h-5" />
                 )}
               </button>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Kekuatan password</p>
+                <span className={`text-xs font-black ${passwordStrength.textClass}`}>{passwordStrength.label}</span>
+              </div>
+              <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${passwordStrength.barClass}`}
+                  style={{ width: passwordStrength.width }}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {PASSWORD_RULES.map((rule) => {
+                  const passed = rule.test(formData.password);
+                  return (
+                    <div key={rule.id} className={`flex items-center gap-2 text-[11px] font-bold ${passed ? "text-emerald-600" : "text-slate-400"}`}>
+                      <span className={`flex h-4 w-4 items-center justify-center rounded-full ${passed ? "bg-emerald-100" : "bg-slate-100"}`}>
+                        {passed ? <FiCheck className="h-3 w-3" /> : <FiX className="h-3 w-3" />}
+                      </span>
+                      {rule.label}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* CONFIRM PASSWORD */}

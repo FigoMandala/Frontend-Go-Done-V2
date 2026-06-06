@@ -46,7 +46,7 @@ const MODE_META = {
 };
 
 const TIPS = [
-  "Matikan notifikasi chat saat sesi fokus berjalan.",
+  "Matikan notifikasi saat sesi fokus berjalan.",
   "Sebelum start, tulis target kecil yang mau selesai di sesi ini.",
   "Simpan hp di luar jangkauan agar tidak terdistraksi.",
   "Pakai jeda 5 menit untuk berdiri, minum, atau tarik napas.",
@@ -235,9 +235,41 @@ function PomodoroTimer() {
     }
   }, [soundEnabled]);
 
+  const refreshNotificationPermission = useCallback(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      return "unsupported";
+    }
+
+    const permission = Notification.permission;
+    setNotificationPermission(permission);
+    return permission;
+  }, []);
+
+  useEffect(() => {
+    refreshNotificationPermission();
+
+    const handleFocus = () => {
+      refreshNotificationPermission();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshNotificationPermission();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [refreshNotificationPermission]);
+
   const sendBrowserNotification = useCallback(
     (title, body) => {
-      if (notificationPermission !== "granted" || typeof window === "undefined") {
+      if (refreshNotificationPermission() !== "granted" || typeof window === "undefined") {
         return;
       }
 
@@ -255,7 +287,7 @@ function PomodoroTimer() {
         // Ignore notification errors in unsupported browsers.
       }
     },
-    [notificationPermission]
+    [refreshNotificationPermission]
   );
 
   const moveToMode = useCallback(
@@ -302,7 +334,7 @@ function PomodoroTimer() {
 
       moveToMode("focus", autoStartNext);
     },
-    [mode, cycleFocusCount, autoStartNext, moveToMode, playCompletionSound, sendBrowserNotification]
+    [mode, cycleFocusCount, targetCycleCount, autoStartNext, moveToMode, playCompletionSound, sendBrowserNotification]
   );
 
   useEffect(() => {
@@ -395,6 +427,16 @@ function PomodoroTimer() {
   const requestNotificationAccess = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       setNotificationPermission("unsupported");
+      return;
+    }
+
+    const currentPermission = refreshNotificationPermission();
+    if (currentPermission === "granted") {
+      sendBrowserNotification("Pomodoro siap", "Notifikasi browser sudah aktif.");
+      return;
+    }
+
+    if (currentPermission === "denied") {
       return;
     }
 
@@ -720,14 +762,18 @@ function PomodoroTimer() {
                       <button
                         type="button"
                         onClick={requestNotificationAccess}
-                        disabled={notificationPermission === "unsupported"}
+                        disabled={notificationPermission !== "default"}
                         className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
                           isDark
                             ? "border-zinc-700 text-zinc-200 hover:bg-zinc-800 disabled:opacity-40"
                             : "border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                         }`}
                       >
-                        Aktifkan
+                        {notificationPermission === "granted"
+                          ? "Aktif"
+                          : notificationPermission === "denied"
+                            ? "Diblokir"
+                            : "Aktifkan"}
                       </button>
                       <button
                         type="button"

@@ -17,7 +17,7 @@ function TopbarOnlyLayout({ children }) {
   }, []);
 
   return (
-    <div className={`flex flex-col min-h-screen overflow-hidden transition-colors duration-500 ${
+    <div className={`flex h-screen max-h-screen flex-col overflow-hidden transition-colors duration-500 ${
       isDark ? 'bg-[#030712] text-zinc-200' : 'bg-gradient-to-br from-[#eff6ff] via-[#f8fafc] to-[#e0f2fe] text-slate-800'
     }`}>
       <div className={`absolute top-[-18%] left-[-10%] w-[42%] h-[42%] rounded-full blur-[150px] pointer-events-none animate-pan ${
@@ -27,10 +27,10 @@ function TopbarOnlyLayout({ children }) {
         isDark ? 'bg-rose-900/10 mix-blend-screen' : 'bg-cyan-300/30'
       }`} style={{ animationDirection: 'reverse' }}></div>
 
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex h-full min-h-0 flex-col">
         <Topbar theme={theme} />
 
-        <main className="flex-1 overflow-y-auto px-5 pb-8 pt-2 md:px-8">
+        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 pb-8 pt-2 md:px-8 custom-scrollbar">
           {children}
         </main>
       </div>

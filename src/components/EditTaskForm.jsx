@@ -62,7 +62,12 @@ function EditTaskForm({
       const normalizedStatus = (task.status || "pending").toString().toLowerCase();
       setStatus(normalizedStatus === "completed" ? "done" : normalizedStatus);
     } else {
-      resetForm();
+      setTaskTitle("");
+      setCategoryId("");
+      setDescription("");
+      setPriority("");
+      setDeadline("");
+      setStatus("pending");
     }
   }, [isEditMode, task]);
 

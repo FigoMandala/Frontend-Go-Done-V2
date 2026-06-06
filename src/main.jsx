@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./index.css";
 import Login from "./components/Login.jsx";
 import Register from "./components/register.jsx";
-import ForgotPassword from "./components/ForgotPassword.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import TaskPriorities from "./components/TaskPriorities.jsx";
 import MyTask from "./components/MyTask.jsx";
@@ -85,6 +84,7 @@ createRoot(document.getElementById("root")).render(
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   </BrowserRouter>
 );

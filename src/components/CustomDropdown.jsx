@@ -108,7 +108,7 @@ const CustomDropdown = ({
               getPriorityDot(selectedLabel) === "bg-amber-500" ? "ring-amber-500/20" : "ring-emerald-500/20"
             }`}></span>
           )}
-          <span className={selected ? "" : (isDark ? "text-zinc-500" : "text-slate-400")}>
+          <span className={selected ? (isDark ? "text-zinc-100" : "text-slate-900") : (isDark ? "text-zinc-500" : "text-slate-400")}>
             {selectedLabel || placeholder || `Choose ${label || "an option"}...`}
           </span>
         </span>
@@ -159,7 +159,7 @@ const CustomDropdown = ({
                     {dot && (
                       <span className={`w-2 h-2 rounded-full transition-transform duration-200 ${dot} ${isSelected ? "scale-125" : "group-hover:scale-110"}`}></span>
                     )}
-                    <span>{option.label}</span>
+                    <span className="text-inherit">{option.label}</span>
                   </div>
 
                   <div className="flex items-center gap-1">

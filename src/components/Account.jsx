@@ -18,6 +18,12 @@ const TABS = [
   { id: 'danger', label: 'Zona Bahaya', icon: FiAlertTriangle, color: 'rose' },
 ];
 
+const isStrongPassword = (value) =>
+  value.length >= 8 &&
+  /[A-Za-z]/.test(value) &&
+  /[0-9]/.test(value) &&
+  /[^A-Za-z0-9]/.test(value);
+
 function Account() {
   const navigate = useNavigate();
   const [theme, setTheme] = useState(localStorage.getItem('dashboardTheme') || 'light');
@@ -219,9 +225,9 @@ function Account() {
       return;
     }
 
-    if (formData.newPassword.length < 6) {
+    if (!isStrongPassword(formData.newPassword)) {
       setIsPopupError(true);
-      setPopupMessage('Password minimal 6 karakter!');
+      setPopupMessage('Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.');
       setShowSuccessPopup(true);
       return;
     }
@@ -266,8 +272,10 @@ function Account() {
       setShowSuccessPopup(true);
     } catch (err) {
       console.log('Update error:', err);
+      const errors = err.response?.data?.errors;
+      const firstError = errors ? Object.values(errors)[0]?.[0] : null;
       setIsPopupError(true);
-      setPopupMessage('Gagal memperbarui password!');
+      setPopupMessage(firstError || err.response?.data?.message || 'Gagal memperbarui password!');
       setShowSuccessPopup(true);
     } finally {
       setIsLoading(false);

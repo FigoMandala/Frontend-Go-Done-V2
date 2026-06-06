@@ -66,7 +66,7 @@ function Sidebar() {
     setIsLoggingOut(true);
     try {
       await backend.post('/auth/logout');
-    } catch (err) {
+    } catch {
       // Ignore errors — we'll clear local state regardless
     } finally {
       setIsLoggingOut(false);
