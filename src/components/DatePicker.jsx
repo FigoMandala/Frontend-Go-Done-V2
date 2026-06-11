@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiChevronLeft, FiChevronRight, FiCalendar } from "react-icons/fi";
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const DAYS_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+const DAYS_SHORT = ["Mg", "Sn", "Sl", "Rb", "Km", "Jm", "Sb"];
 
 function DatePicker({ label, value, onChange, isDark = false, minDate }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,14 +101,14 @@ function DatePicker({ label, value, onChange, isDark = false, minDate }) {
     if (!val) return null;
     const [y, m, d] = val.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString("id-ID", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
   };
 
   // Quick picks
   const quickPicks = [
-    { label: "Today", date: new Date() },
-    { label: "Tomorrow", date: new Date(Date.now() + 86400000) },
-    { label: "Next Week", date: new Date(Date.now() + 7 * 86400000) },
+    { label: "Hari Ini", date: new Date() },
+    { label: "Besok", date: new Date(Date.now() + 86400000) },
+    { label: "Minggu Depan", date: new Date(Date.now() + 7 * 86400000) },
   ];
 
   const labelClass = isDark ? "text-zinc-300 font-semibold text-sm" : "text-slate-700 font-semibold text-sm";
@@ -130,7 +130,7 @@ function DatePicker({ label, value, onChange, isDark = false, minDate }) {
         <span className="flex items-center gap-2.5">
           <FiCalendar className={`w-4 h-4 ${isDark ? "text-indigo-400" : "text-blue-500"}`} />
           <span className={value ? "" : (isDark ? "text-zinc-500" : "text-slate-400")}>
-            {formatDisplayDate(value) || "Pick a date..."}
+            {formatDisplayDate(value) || "Pilih tanggal..."}
           </span>
         </span>
         <FiChevronRight className={`w-4 h-4 transition-all duration-300 ${isDark ? "text-zinc-500" : "text-slate-400"} ${isOpen ? "rotate-90 scale-90" : ""}`} />

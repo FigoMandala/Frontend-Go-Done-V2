@@ -78,9 +78,9 @@ const CustomDropdown = ({
   // Priority dot colors
   const getPriorityDot = (label) => {
     const l = (label || "").toLowerCase();
-    if (l === "high") return "bg-rose-500";
-    if (l === "medium") return "bg-amber-500";
-    if (l === "low") return "bg-emerald-500";
+    if (l === "high" || l === "tinggi") return "bg-rose-500";
+    if (l === "medium" || l === "sedang") return "bg-amber-500";
+    if (l === "low" || l === "rendah") return "bg-emerald-500";
     return null;
   };
 
@@ -109,7 +109,7 @@ const CustomDropdown = ({
             }`}></span>
           )}
           <span className={selected ? (isDark ? "text-zinc-100" : "text-slate-900") : (isDark ? "text-zinc-500" : "text-slate-400")}>
-            {selectedLabel || placeholder || `Choose ${label || "an option"}...`}
+            {selectedLabel || placeholder || `Pilih ${label || "opsi"}...`}
           </span>
         </span>
         <FiChevronDown

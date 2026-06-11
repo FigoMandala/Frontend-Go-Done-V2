@@ -47,9 +47,9 @@ function EditTaskForm({
   }, []);
 
   const priorityOptions = [
-    { label: "Low", value: "Low" },
-    { label: "Medium", value: "Medium" },
-    { label: "High", value: "High" },
+    { label: "Rendah", value: "Low" },
+    { label: "Sedang", value: "Medium" },
+    { label: "Tinggi", value: "High" },
   ];
 
   useEffect(() => {

@@ -7,7 +7,7 @@ import { FiEdit2, FiTrash2, FiCheck, FiAlertTriangle, FiCheckCircle } from "reac
 const formatDate = (dateStr) => {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
 };
 
 const normalizePriority = (p) => {
@@ -201,8 +201,8 @@ function TaskPriorities() {
         <div className={`rounded-3xl border p-5 md:p-7 backdrop-blur-xl relative overflow-hidden ${panelClass}`}>
           <div className={`absolute -top-32 -right-16 w-80 h-80 rounded-full blur-[80px] pointer-events-none ${isDark ? "bg-rose-500/10" : "bg-rose-400/5"}`}></div>
           <div className="relative z-10">
-            <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Overview</p>
-            <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>Task Priorities</h1>
+            <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Ringkasan</p>
+            <h1 className={`text-2xl md:text-3xl font-extrabold mt-1 tracking-tight ${headingClass}`}>Prioritas Task</h1>
             <p className={`mt-1 text-sm ${subtleClass}`}>{totalTasks} task aktif di semua prioritas</p>
           </div>
         </div>
@@ -232,7 +232,7 @@ function TaskPriorities() {
                     </div>
                   ) : columnTasks.length === 0 ? (
                     <div className={`rounded-2xl border border-dashed flex flex-col items-center justify-center p-8 text-center ${isDark ? "border-zinc-700 bg-zinc-900/30" : "border-slate-200 bg-slate-50/50"}`}>
-                      <p className={`text-xs font-medium ${subtleClass}`}>Tidak ada task prioritas {priority.toLowerCase()}</p>
+                      <p className={`text-xs font-medium ${subtleClass}`}>Tidak ada task {config.label.toLowerCase()}</p>
                     </div>
                   ) : (
                     columnTasks.map((task, idx) => (

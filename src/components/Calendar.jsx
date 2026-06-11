@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { FiChevronLeft, FiChevronRight, FiMaximize2, FiMinimize2, FiCalendar } from "react-icons/fi";
 import backend from "../api/backend";
 
-const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DAYS_SHORT = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+const MONTHS = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+const PRIORITY_LABELS = { high: "Tinggi", medium: "Sedang", low: "Rendah" };
 
 function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -124,7 +126,7 @@ function CalendarPage() {
             {task.category && <span className={`text-[11px] ${subtleClass}`}>{task.category}</span>}
             {task.category && <span className={`w-0.5 h-0.5 rounded-full ${isDark ? "bg-zinc-600" : "bg-slate-300"}`}></span>}
             <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getPriorityBadge(task.priority)}`}>
-              {task.priority || "normal"}
+              {PRIORITY_LABELS[task.priority] || task.priority || "normal"}
             </span>
           </div>
         </div>
@@ -142,8 +144,8 @@ function CalendarPage() {
           <div className="relative z-10 flex items-center gap-3">
             <FiCalendar className={`w-5 h-5 ${isDark ? "text-indigo-400" : "text-[#21569A]"}`} />
             <div>
-              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Schedule</p>
-              <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight ${headingClass}`}>Calendar</h1>
+              <p className={`text-[11px] tracking-widest uppercase font-bold ${isDark ? "text-indigo-400" : "text-[#21569A]"}`}>Jadwal</p>
+              <h1 className={`text-2xl md:text-3xl font-extrabold tracking-tight ${headingClass}`}>Kalender</h1>
             </div>
           </div>
         </div>
@@ -240,7 +242,7 @@ function CalendarPage() {
                             )
                           )}
                           {events.length > (isExpanded ? 4 : 2) && (
-                            <span className={`text-[8px] font-bold ${subtleClass}`}>+{events.length - (isExpanded ? 4 : 2)} more</span>
+                            <span className={`text-[8px] font-bold ${subtleClass}`}>+{events.length - (isExpanded ? 4 : 2)} lagi</span>
                           )}
                         </div>
                       </>
@@ -274,7 +276,7 @@ function CalendarPage() {
                       : isDark ? "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  All Events
+                  Semua Acara
                 </button>
                 <button
                   onClick={() => setViewMode("selected")}
@@ -284,7 +286,7 @@ function CalendarPage() {
                       : isDark ? "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  Selected
+                  Terpilih
                 </button>
               </div>
 
@@ -292,7 +294,7 @@ function CalendarPage() {
               {viewMode === "selected" && selectedDay && (
                 <div className={`px-5 pt-4 pb-2`}>
                   <h3 className={`text-sm font-bold ${headingClass}`}>
-                    {new Date(year, month, selectedDay).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                    {new Date(year, month, selectedDay).toLocaleDateString("id-ID", { month: "long", day: "numeric", year: "numeric" })}
                   </h3>
                 </div>
               )}
@@ -307,20 +309,20 @@ function CalendarPage() {
                   validTasks.length === 0 ? (
                     <div className={`flex flex-col items-center justify-center py-10 text-center ${subtleClass}`}>
                       <FiCalendar className={`w-8 h-8 mb-3 ${isDark ? "text-zinc-600" : "text-slate-300"}`} />
-                      <p className="text-sm font-medium">No events</p>
+                      <p className="text-sm font-medium">Tidak ada acara</p>
                     </div>
                   ) : (
                     (() => {
                       const grouped = {};
                       validTasks.forEach((t) => {
-                        const d = t.deadline || "No date";
+                        const d = t.deadline || "Tanpa tanggal";
                         if (!grouped[d]) grouped[d] = [];
                         grouped[d].push(t);
                       });
                       return Object.keys(grouped).sort().map((date) => {
                         const dateTasks = grouped[date];
-                        const dateObj = date !== "No date" ? new Date(date + "T00:00:00") : null;
-                        const formattedDate = dateObj ? dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "No date";
+                        const dateObj = date !== "Tanpa tanggal" ? new Date(date + "T00:00:00") : null;
+                        const formattedDate = dateObj ? dateObj.toLocaleDateString("id-ID", { month: "short", day: "numeric" }) : "Tanpa tanggal";
                         return (
                           <div key={date} className="mb-1">
                             <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${subtleClass}`}>{formattedDate}</p>
@@ -336,7 +338,7 @@ function CalendarPage() {
                   selectedEvents.length === 0 ? (
                     <div className={`flex flex-col items-center justify-center py-10 text-center ${subtleClass}`}>
                       <FiCalendar className={`w-8 h-8 mb-3 ${isDark ? "text-zinc-600" : "text-slate-300"}`} />
-                      <p className="text-sm font-medium">{selectedDay ? "No tasks on this date" : "Click a date to view tasks"}</p>
+                      <p className="text-sm font-medium">{selectedDay ? "Tidak ada task di tanggal ini" : "Klik tanggal untuk melihat task"}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -348,12 +350,12 @@ function CalendarPage() {
 
               {/* Legend */}
               <div className={`p-4 border-t ${isDark ? "border-zinc-800/80" : "border-slate-200/60"}`}>
-                <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${subtleClass}`}>Priority Legend</p>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${subtleClass}`}>Legenda Prioritas</p>
                 <div className="flex gap-4">
                   {[
-                    { label: "High", dot: "bg-rose-500" },
-                    { label: "Medium", dot: "bg-amber-500" },
-                    { label: "Low", dot: "bg-emerald-500" },
+                    { label: "Tinggi", dot: "bg-rose-500" },
+                    { label: "Sedang", dot: "bg-amber-500" },
+                    { label: "Rendah", dot: "bg-emerald-500" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1.5">
                       <div className={`w-2 h-2 rounded-full ${item.dot}`}></div>

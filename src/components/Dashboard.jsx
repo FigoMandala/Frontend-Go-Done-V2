@@ -423,7 +423,7 @@ function Dashboard() {
                 >
                   <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 ${isDark ? "bg-zinc-800" : "bg-slate-50 border border-slate-100"}`}>
                     <span className={`text-[9px] uppercase tracking-widest font-bold ${isDark ? "text-indigo-400" : "text-blue-600"}`}>
-                      {task.deadline ? new Date(task.deadline).toLocaleDateString("en-US", { month: "short" }) : "-"}
+                      {task.deadline ? new Date(task.deadline).toLocaleDateString("id-ID", { month: "short" }) : "-"}
                     </span>
                     <span className={`text-lg font-bold leading-none ${headingClass}`}>
                       {task.deadline ? new Date(task.deadline).getDate() : "-"}

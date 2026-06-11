@@ -354,6 +354,15 @@ function MyTask() {
     }
   };
 
+  const priorityLabel = (p) => {
+    switch ((p || "").toLowerCase()) {
+      case "high": return "Tinggi";
+      case "medium": return "Sedang";
+      case "low": return "Rendah";
+      default: return p || "normal";
+    }
+  };
+
   const priorityBadgeClass = (p) => {
     switch ((p || "").toLowerCase()) {
       case "high": return isDark ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-200";
@@ -574,7 +583,7 @@ function MyTask() {
                       </p>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className={`text-xs truncate ${subtleClass}`}>
-                          {sanitizeOutput(categoriesMap[String(task.categoryId)] || "Uncategorized")}
+                          {sanitizeOutput(categoriesMap[String(task.categoryId)] || "Tanpa kategori")}
                         </span>
                         <span className={`w-0.5 h-0.5 rounded-full ${isDark ? "bg-zinc-600" : "bg-slate-300"}`}></span>
                         <span className={`text-xs font-medium ${deadlineBadgeClass(task.deadline)}`}>
@@ -585,7 +594,7 @@ function MyTask() {
 
                     {/* Priority Badge */}
                     <span className={`text-[10px] px-2 py-1 rounded-md border uppercase font-bold tracking-widest shrink-0 hidden sm:inline-block ${priorityBadgeClass(task.priority)}`}>
-                      {task.priority || "normal"}
+                      {priorityLabel(task.priority)}
                     </span>
 
                     {/* Actions */}
