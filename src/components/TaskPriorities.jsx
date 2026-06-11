@@ -254,7 +254,7 @@ function TaskPriorities() {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                             <button onClick={() => handleEdit(task)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"}`} title="Edit">
                               <FiEdit2 className="w-3.5 h-3.5" />
                             </button>

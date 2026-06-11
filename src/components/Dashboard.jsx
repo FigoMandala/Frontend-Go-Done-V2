@@ -345,7 +345,7 @@ function Dashboard() {
                           : "border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50 text-slate-300 hover:text-emerald-600"
                       }`}
                     >
-                      <FiCheck className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <FiCheck className="w-4 h-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
                     </button>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-semibold truncate ${headingClass}`}>{task.title}</p>
@@ -438,7 +438,7 @@ function Dashboard() {
                       setEditingTask({ id: task.id, title: task.title, description: task.description, deadline: task.deadline, priority: task.priority, categoryId: task.categoryId });
                       setShowEditModal(true);
                     }}
-                    className={`w-9 h-9 opacity-0 group-hover:opacity-100 rounded-full border flex items-center justify-center transition-all ${
+                    className={`w-9 h-9 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 rounded-full border flex items-center justify-center transition-all ${
                       isDark ? "border-zinc-700 text-zinc-400 hover:bg-zinc-700 hover:text-white" : "border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
                     }`}
                   >
@@ -486,7 +486,7 @@ function Dashboard() {
                       {getDaysUntilDeadline(task.deadline) * -1} hari terlambat
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => {
                         setDeleteTaskId(task.id);

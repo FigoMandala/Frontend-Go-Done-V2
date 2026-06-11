@@ -4,7 +4,7 @@ import backend from "../api/backend";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 
-function Sidebar() {
+function Sidebar({ onNavigate = () => {} }) {
   const navigate = useNavigate();
   const [user, setUser] = useState({});
   const [isVisible, setIsVisible] = useState(false);
@@ -63,6 +63,7 @@ function Sidebar() {
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
+    onNavigate();
     setIsLoggingOut(true);
     try {
       await backend.post('/auth/logout');
@@ -93,7 +94,7 @@ function Sidebar() {
             ? "hover:bg-zinc-800/40 border-transparent hover:border-zinc-700/50" 
             : "hover:bg-white/60 border-transparent hover:border-slate-200"
         }`}
-        onClick={() => navigate("/account")}
+        onClick={() => { onNavigate(); navigate("/account"); }}
       >
         <div className="relative shrink-0">
           <img
@@ -134,7 +135,7 @@ function Sidebar() {
           { to: "/pomodoro", icon: FiClock, label: "Pomodoro" },
         ].map((item) => (
           <div key={item.to}>
-             <NavLink to={item.to} className={({ isActive }) => getLinkClass(isActive)}>
+             <NavLink to={item.to} onClick={onNavigate} className={({ isActive }) => getLinkClass(isActive)}>
                {({ isActive }) => (
                  <>
                    <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${

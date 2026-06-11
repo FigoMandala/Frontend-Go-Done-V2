@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FiBell, FiAlertCircle, FiClock, FiCalendar } from "react-icons/fi";
+import { FiBell, FiAlertCircle, FiClock, FiCalendar, FiMenu } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import logoGoDone from '../assets/GoDone Logo.png';
 import backend from "../api/backend";
 
 const NOTIFICATION_FETCH_COOLDOWN_MS = 30 * 1000;
 
-function Topbar({ theme = "light" }) {
+function Topbar({ theme = "light", onMenuToggle }) {
   const [dateTime, setDateTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -94,6 +94,20 @@ function Topbar({ theme = "light" }) {
       
       {/* LOGO Area */}
       <div className="flex items-center gap-3">
+        {onMenuToggle && (
+          <button
+            type="button"
+            onClick={onMenuToggle}
+            aria-label="Buka menu"
+            className={`lg:hidden p-2.5 rounded-2xl border shadow-lg transition-all ${
+              isDark
+                ? "bg-zinc-900/75 border-zinc-700/70 text-zinc-300 hover:text-white"
+                : "bg-white/90 border-slate-200/80 text-slate-600 hover:text-[#21569A]"
+            }`}
+          >
+            <FiMenu className="w-5 h-5" />
+          </button>
+        )}
         <div
           className={`p-2 rounded-2xl border shadow-lg overflow-hidden transition-all duration-300 ${
             isDark
@@ -146,7 +160,7 @@ function Topbar({ theme = "light" }) {
 
           {/* NOTIFICATION WINDOW */}
           {showNotifications && (
-            <div className={`absolute right-0 top-16 w-[380px] backdrop-blur-3xl rounded-3xl shadow-2xl border overflow-hidden z-[100] transform transition-all animate-slide-up origin-top-right ${
+            <div className={`absolute right-0 top-16 w-[min(380px,calc(100vw-2rem))] backdrop-blur-3xl rounded-3xl shadow-2xl border overflow-hidden z-[100] transform transition-all animate-slide-up origin-top-right ${
               isDark
                 ? "bg-zinc-900/90 border-white/10 shadow-black/50"
                 : "bg-white/95 border-white/80 shadow-slate-400/20"

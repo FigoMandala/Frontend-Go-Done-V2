@@ -598,7 +598,7 @@ function MyTask() {
                     </span>
 
                     {/* Actions */}
-                    <div className={`flex items-center gap-1 shrink-0 transition-opacity ${isDone ? "opacity-30" : "opacity-0 group-hover:opacity-100"}`}>
+                    <div className={`flex items-center gap-1 shrink-0 transition-opacity ${isDone ? "opacity-30" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"}`}>
                       <button
                         onClick={() => !isDone && handleEditTask(task)}
                         disabled={isDone}

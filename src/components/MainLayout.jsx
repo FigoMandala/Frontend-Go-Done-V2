@@ -4,7 +4,10 @@ import Topbar from './Topbar';
 
 function MainLayout({ children }) {
   const [theme, setTheme] = useState(localStorage.getItem('dashboardTheme') || 'light');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDark = theme === 'dark';
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   useEffect(() => {
     const handleThemeChange = (event) => {
@@ -15,6 +18,14 @@ function MainLayout({ children }) {
 
     window.addEventListener('dashboardThemeChange', handleThemeChange);
     return () => window.removeEventListener('dashboardThemeChange', handleThemeChange);
+  }, []);
+
+  // Close the mobile drawer when the viewport grows to desktop size.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handleChange = (e) => { if (e.matches) setSidebarOpen(false); };
+    mq.addEventListener('change', handleChange);
+    return () => mq.removeEventListener('change', handleChange);
   }, []);
 
   return (
@@ -30,14 +41,26 @@ function MainLayout({ children }) {
       }`} style={{ animationDirection: 'reverse' }}></div>
 
       <div className="relative z-10 flex flex-col h-full min-h-0">
-        <Topbar theme={theme} />
-        
-        <div className="flex flex-1 min-h-0 gap-5 p-5 pt-2">
-          {/* Sidebar - Left Side */}
-          <div className="w-56 flex-shrink-0 min-h-0">
-            <Sidebar />
+        <Topbar theme={theme} onMenuToggle={() => setSidebarOpen(true)} />
+
+        <div className="flex flex-1 min-h-0 gap-0 lg:gap-5 px-3 pb-3 pt-2 sm:px-5 sm:pb-5 lg:p-5 lg:pt-2">
+          {/* Mobile drawer backdrop */}
+          <div
+            onClick={closeSidebar}
+            className={`lg:hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+              sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          />
+
+          {/* Sidebar - drawer on phone/tablet, static column on desktop */}
+          <div
+            className={`fixed inset-y-0 left-0 z-[70] w-[82%] max-w-xs p-3 transition-transform duration-300 ease-out flex-shrink-0 min-h-0 lg:static lg:z-auto lg:w-56 lg:max-w-none lg:p-0 lg:translate-x-0 ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <Sidebar onNavigate={closeSidebar} />
           </div>
-          
+
           {/* Main Content - Right Side */}
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
             {children}
