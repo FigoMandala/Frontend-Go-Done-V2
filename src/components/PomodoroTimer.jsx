@@ -142,6 +142,11 @@ function PomodoroTimer() {
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
   const [history, setHistory] = useState(initial.history);
   const [tipIndex, setTipIndex] = useState(0);
+  const [durationInputs, setDurationInputs] = useState(() => ({
+    focus: String(Math.floor(initial.durations.focus / 60)),
+    shortBreak: String(Math.floor(initial.durations.shortBreak / 60)),
+    longBreak: String(Math.floor(initial.durations.longBreak / 60)),
+  }));
 
   const [notificationPermission, setNotificationPermission] = useState(() => {
     if (typeof window === "undefined") return "unsupported";
@@ -150,7 +155,38 @@ function PomodoroTimer() {
   });
 
   const endAtRef = useRef(null);
+  const audioCtxRef = useRef(null);
   const isDark = theme === "dark";
+
+  // Lazily create/unlock the Web Audio context. Browsers keep it suspended
+  // until a user gesture, so we prime it on Start / sound-toggle clicks —
+  // otherwise the completion beep stays silent.
+  const ensureAudioContext = useCallback(() => {
+    if (typeof window === "undefined") return null;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!audioCtxRef.current) {
+      try {
+        audioCtxRef.current = new AudioCtx();
+      } catch {
+        return null;
+      }
+    }
+    if (audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+    return audioCtxRef.current;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      const ctx = audioCtxRef.current;
+      if (ctx) {
+        ctx.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+    };
+  }, []);
 
   const currentModeMeta = MODE_META[mode];
   const totalSeconds = durations[mode];
@@ -201,39 +237,37 @@ function PomodoroTimer() {
     };
   }, [timeLeft, currentModeMeta.label]);
 
-  const playCompletionSound = useCallback(() => {
-    if (!soundEnabled || typeof window === "undefined") {
-      return;
-    }
-
+  const emitBeep = useCallback((context) => {
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const context = new AudioCtx();
-      const oscillator = context.createOscillator();
-      const gainNode = context.createGain();
-
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, context.currentTime);
-      oscillator.frequency.linearRampToValueAtTime(660, context.currentTime + 0.2);
-
-      gainNode.gain.setValueAtTime(0.001, context.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.03);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
-
-      oscillator.connect(gainNode);
-      gainNode.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.26);
-
-      setTimeout(() => {
-        context.close();
-      }, 350);
+      const now = context.currentTime;
+      // A clear two-note ascending chime so it's actually noticeable.
+      const notes = [
+        { freq: 660, start: 0, dur: 0.18 },
+        { freq: 990, start: 0.16, dur: 0.32 },
+      ];
+      notes.forEach(({ freq, start, dur }) => {
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(freq, now + start);
+        gainNode.gain.setValueAtTime(0.0001, now + start);
+        gainNode.gain.exponentialRampToValueAtTime(0.35, now + start + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start(now + start);
+        oscillator.stop(now + start + dur + 0.02);
+      });
     } catch {
       // Ignore audio errors to keep timer stable.
     }
-  }, [soundEnabled]);
+  }, []);
+
+  const playCompletionSound = useCallback(() => {
+    if (!soundEnabled) return;
+    const context = ensureAudioContext();
+    if (context) emitBeep(context);
+  }, [soundEnabled, ensureAudioContext, emitBeep]);
 
   const refreshNotificationPermission = useCallback(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
@@ -362,6 +396,7 @@ function PomodoroTimer() {
 
   const handleStartPause = useCallback(() => {
     if (!isRunning) {
+      ensureAudioContext();
       endAtRef.current = Date.now() + timeLeft * 1000;
       setIsRunning(true);
       return;
@@ -374,7 +409,7 @@ function PomodoroTimer() {
 
     endAtRef.current = null;
     setIsRunning(false);
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, ensureAudioContext]);
 
   const handleReset = useCallback(() => {
     endAtRef.current = null;
@@ -397,31 +432,32 @@ function PomodoroTimer() {
   };
 
   const adjustDuration = (targetMode, deltaMinutes) => {
-    setDurations((prev) => {
-      const nextValue = clampDuration(prev[targetMode] + deltaMinutes * 60);
-      const nextDurations = { ...prev, [targetMode]: nextValue };
-
-      if (!isRunning && mode === targetMode) {
-        setTimeLeft(nextValue);
-      }
-
-      return nextDurations;
-    });
+    const nextValue = clampDuration(durations[targetMode] + deltaMinutes * 60);
+    setDurations((prev) => ({ ...prev, [targetMode]: nextValue }));
+    setDurationInputs((prev) => ({ ...prev, [targetMode]: String(Math.floor(nextValue / 60)) }));
+    if (!isRunning && mode === targetMode) {
+      setTimeLeft(nextValue);
+    }
   };
 
-  const setExactDuration = (targetMode, minutes) => {
-    const val = parseInt(minutes, 10);
-    if (isNaN(val)) return;
-    setDurations((prev) => {
-      const nextValue = Math.min(90 * 60, Math.max(60, val * 60));
-      const nextDurations = { ...prev, [targetMode]: nextValue };
+  // Allow the field to be edited freely (including empty/partial) while typing;
+  // only validate + clamp to the 1–90 minute range when editing finishes.
+  const handleDurationInputChange = (targetMode, raw) => {
+    if (!/^\d{0,3}$/.test(raw)) return;
+    setDurationInputs((prev) => ({ ...prev, [targetMode]: raw }));
+  };
 
-      if (!isRunning && mode === targetMode) {
-        setTimeLeft(nextValue);
-      }
-
-      return nextDurations;
-    });
+  const commitDurationInput = (targetMode) => {
+    const parsed = parseInt(durationInputs[targetMode], 10);
+    const minutes = Number.isNaN(parsed)
+      ? Math.floor(durations[targetMode] / 60)
+      : Math.min(90, Math.max(1, parsed));
+    const nextValue = minutes * 60;
+    setDurations((prev) => ({ ...prev, [targetMode]: nextValue }));
+    setDurationInputs((prev) => ({ ...prev, [targetMode]: String(minutes) }));
+    if (!isRunning && mode === targetMode) {
+      setTimeLeft(nextValue);
+    }
   };
 
   const requestNotificationAccess = async () => {
@@ -658,11 +694,12 @@ function PomodoroTimer() {
                       </button>
                       <div className="flex-1 relative">
                         <input
-                          type="number"
-                          min="1"
-                          max="90"
-                          value={Math.floor(durations[key] / 60)}
-                          onChange={(e) => setExactDuration(key, e.target.value)}
+                          type="text"
+                          inputMode="numeric"
+                          value={durationInputs[key]}
+                          onChange={(e) => handleDurationInputChange(key, e.target.value)}
+                          onBlur={() => commitDurationInput(key)}
+                          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
                           className={`w-full text-center py-1.5 rounded-lg border text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all ${isDark ? "bg-zinc-800/50 border-zinc-700 text-zinc-100" : "bg-slate-50 border-slate-200 text-slate-800"}`}
                         />
                         <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold pointer-events-none ${isDark ? "text-zinc-500" : "text-slate-400"}`}>min</span>
@@ -724,7 +761,14 @@ function PomodoroTimer() {
 
                 <button
                   type="button"
-                  onClick={() => setSoundEnabled((prev) => !prev)}
+                  onClick={() => {
+                    const next = !soundEnabled;
+                    setSoundEnabled(next);
+                    if (next) {
+                      const ctx = ensureAudioContext();
+                      if (ctx) emitBeep(ctx);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl border transition-colors ${
                     soundEnabled
                       ? isDark

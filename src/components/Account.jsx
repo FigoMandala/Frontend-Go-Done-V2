@@ -124,7 +124,7 @@ function Account() {
         const updated = { ...user, photo_url: null };
         setUser(updated);
         broadcastUserUpdate(updated);
-        showToast('success', 'Photo removed!');
+        showToast('success', 'Foto berhasil dihapus!');
       } else {
         showToast('error', 'Gagal hapus foto!');
       }
@@ -185,7 +185,7 @@ function Account() {
 
       if (!res.data.success) {
         setIsPopupError(true);
-        setPopupMessage(res.data.message || 'Failed to update profile!');
+        setPopupMessage(res.data.message || 'Gagal memperbarui profil!');
         setShowSuccessPopup(true);
         return;
       }
@@ -255,7 +255,7 @@ function Account() {
 
       if (!res.data.success) {
         setIsPopupError(true);
-        setPopupMessage(res.data.message || 'Failed to update password!');
+        setPopupMessage(res.data.message || 'Gagal memperbarui password!');
         setShowSuccessPopup(true);
         return;
       }
@@ -685,7 +685,7 @@ function Account() {
           value={formData[name] || ''}
           onChange={handleChange}
           className={fieldClass}
-          placeholder={`Enter ${label.toLowerCase()}`}
+          placeholder={`Masukkan ${label.toLowerCase()}`}
         />
         <button type="button" onClick={() => togglePass(showKey)} className={`absolute right-4 top-1/2 -translate-y-1/2 ${helperClass}`}>
           {showPass[showKey] ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -937,6 +937,7 @@ function Account() {
                 setNotifOn(newVal);
                 localStorage.setItem('notifEnabled', JSON.stringify(newVal));
                 window.dispatchEvent(new CustomEvent('notifEnabledChange', { detail: newVal }));
+                toast(newVal ? 'Notifikasi diaktifkan' : 'Notifikasi dimatikan', { icon: newVal ? '🔔' : '🔕' });
               }}
               className={`relative h-7 w-12 rounded-full transition-all duration-500 shadow-inner ${
                 notifOn ? (isDark ? 'bg-indigo-600' : 'bg-[#21569A]') : (isDark ? 'bg-zinc-700' : 'bg-slate-300')
@@ -955,7 +956,7 @@ function Account() {
         <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-4 p-1 px-3 rounded-lg w-fit ${isDark ? 'bg-sky-500/10 text-sky-400' : 'bg-sky-50 text-sky-600'}`}>Metadata Aplikasi</h4>
         <div className="space-y-2.5 flex-1">
           {[
-            { label: 'Versi', value: '1.0.0' },
+            { label: 'Versi', value: '1.01' },
             { label: 'Tema Sistem', value: isDark ? 'OLED Dark' : 'Glass Light' },
             { label: 'ID Unik', value: `${profileInitials}-${user.id || 'GO1'}` },
           ].map((item, i) => (

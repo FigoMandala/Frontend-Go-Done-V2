@@ -56,9 +56,9 @@ function Login() {
       } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
         toast.error("Tidak terhubung ke server, coba lagi 😀");
       } else if (err.code === "ECONNABORTED") {
-        toast.error("❌ Request timeout - server tidak merespon");
+        toast.error("❌ Waktu permintaan habis - server tidak merespon");
       } else {
-        toast.error("❌ Error: " + (err.message || "Terjadi kesalahan"));
+        toast.error("❌ Kesalahan: " + (err.message || "Terjadi kesalahan"));
       }
     } finally {
       setIsLoading(false);

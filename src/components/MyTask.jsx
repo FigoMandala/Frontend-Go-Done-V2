@@ -182,7 +182,7 @@ function MyTask() {
           setShowDefaultCategoryHint(true);
         }
       } catch (err) {
-        showPopup("error", "Error", err.response?.data?.error || "Failed to load data from server");
+        showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal memuat data dari server");
       } finally {
         setLoading(false);
       }
@@ -215,7 +215,7 @@ function MyTask() {
       setCategories((prev) => [...prev, { value: res.data?.category_id, label: newName }]);
       showPopup("success", "Kategori Ditambahkan", "Kategori baru berhasil dibuat.");
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to add category");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menambah kategori");
     }
   };
 
@@ -234,7 +234,7 @@ function MyTask() {
       closePopup();
       showPopup("success", "Diperbarui", "Nama kategori berhasil diubah.");
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to update category");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal memperbarui kategori");
     }
   };
 
@@ -246,10 +246,10 @@ function MyTask() {
     } catch (err) {
       if (err.response?.status === 400) {
         const found = categories.find((c) => String(c.value) === String(catId));
-        showPopup("error", "Cannot Delete", `Category "${found?.label || "this"}" is used by tasks.`);
+        showPopup("error", "Tidak Bisa Dihapus", `Kategori "${found?.label || "ini"}" sedang dipakai oleh task.`);
         return;
       }
-      showPopup("error", "Error", err.response?.data?.error || "Failed to delete category");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menghapus kategori");
     }
   };
 
@@ -271,7 +271,7 @@ function MyTask() {
       setIsEditMode(false);
       setEditingTaskId(null);
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || err.response?.data?.message || "Failed to save task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || err.response?.data?.message || "Gagal menyimpan task");
     } finally {
       setIsRequestPending(false);
     }
@@ -291,7 +291,7 @@ function MyTask() {
       closePopup();
       showPopup("success", "Dihapus", "Task berhasil dihapus.");
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to delete task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menghapus task");
     } finally {
       setIsRequestPending(false);
     }
@@ -319,7 +319,7 @@ function MyTask() {
       setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status: "Done" } : t)));
       showPopup("success", "Selesai", "Task ditandai sebagai selesai.");
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to complete task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menyelesaikan task");
     } finally {
       setIsRequestPending(false);
     }

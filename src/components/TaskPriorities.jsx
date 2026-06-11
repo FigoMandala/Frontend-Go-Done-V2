@@ -146,7 +146,7 @@ function TaskPriorities() {
       showPopup("success", "Diperbarui", "Task berhasil diperbarui.");
       await fetchTasks();
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to update task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal memperbarui task");
     }
   };
 
@@ -160,7 +160,7 @@ function TaskPriorities() {
       showPopup("success", "Dihapus", "Task berhasil dihapus.");
       fetchTasks();
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to delete task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menghapus task");
     }
   };
 
@@ -170,7 +170,7 @@ function TaskPriorities() {
       showPopup("success", "Selesai", "Task ditandai sebagai selesai.");
       fetchTasks();
     } catch (err) {
-      showPopup("error", "Error", err.response?.data?.error || "Failed to complete task");
+      showPopup("error", "Kesalahan", err.response?.data?.error || "Gagal menyelesaikan task");
     }
   };
 

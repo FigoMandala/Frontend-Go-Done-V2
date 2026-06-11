@@ -87,10 +87,11 @@ function Topbar({ theme = "light", onMenuToggle }) {
     const due = new Date(deadline); due.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return <span className="text-rose-400 font-bold bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">Terlambat</span>;
-    if (diffDays === 0) return <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">Hari ini</span>;
-    if (diffDays === 1) return <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">Besok</span>;
-    return <span className="text-zinc-400 px-2.5 py-1 bg-zinc-800/50 rounded-md border border-zinc-700/50">{diffDays} hari lagi</span>;
+    const base = "font-bold px-2.5 py-1 rounded-md border";
+    if (diffDays < 0) return <span className={`${base} ${isDark ? "text-rose-300 bg-rose-500/15 border-rose-500/30" : "text-rose-700 bg-rose-100 border-rose-300"}`}>Terlambat</span>;
+    if (diffDays === 0) return <span className={`${base} ${isDark ? "text-emerald-300 bg-emerald-500/15 border-emerald-500/30" : "text-emerald-700 bg-emerald-100 border-emerald-300"}`}>Hari ini</span>;
+    if (diffDays === 1) return <span className={`${base} ${isDark ? "text-amber-300 bg-amber-500/15 border-amber-500/30" : "text-amber-700 bg-amber-100 border-amber-300"}`}>Besok</span>;
+    return <span className={`${base} ${isDark ? "text-zinc-300 bg-zinc-800/60 border-zinc-700/60" : "text-slate-600 bg-slate-100 border-slate-300"}`}>{diffDays} hari lagi</span>;
   };
 
   const getPriorityColor = (priority) => {
