@@ -3,6 +3,7 @@ import { FiBell, FiAlertCircle, FiClock, FiCalendar, FiMenu } from "react-icons/
 import { useNavigate } from "react-router-dom";
 import logoGoDone from '../assets/GoDone Logo.png';
 import backend from "../api/backend";
+import useDeadlineNotifications from "../hooks/useDeadlineNotifications";
 
 const NOTIFICATION_FETCH_COOLDOWN_MS = 30 * 1000;
 
@@ -14,11 +15,21 @@ function Topbar({ theme = "light", onMenuToggle }) {
   const inFlightRequestRef = useRef(null);
   const isDark = theme === "dark";
   
-  const [notifOn] = useState(() => {
+  const [notifOn, setNotifOn] = useState(() => {
     const saved = localStorage.getItem("notifEnabled");
     return saved === null ? true : JSON.parse(saved);
   });
-  
+
+  // Run deadline reminders (browser notification + toast) while the app is open.
+  useDeadlineNotifications();
+
+  // React live when the notification toggle is flipped on the Account page.
+  useEffect(() => {
+    const handler = (e) => setNotifOn(Boolean(e.detail));
+    window.addEventListener("notifEnabledChange", handler);
+    return () => window.removeEventListener("notifEnabledChange", handler);
+  }, []);
+
   const navigate = useNavigate();
 
   const fetchTasks = useCallback(async (force = false) => {

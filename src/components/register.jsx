@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import backend from "../api/backend";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import illustration from "../assets/Registrasi.svg";
 import { FaUser, FaLock, FaRegUser } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";
@@ -163,17 +163,6 @@ function Register() {
       {/* Soft Ambient Blobs Background */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[70%] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-cyan-300/30 blur-[130px] pointer-events-none"></div>
-
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            fontSize: "16px",
-            padding: "16px 24px",
-            borderRadius: "16px",
-          },
-        }}
-      />
 
       <div className="relative z-10 bg-white/60 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white/80 flex flex-col lg:flex-row items-stretch justify-between w-[90%] max-w-[1200px] min-h-[650px] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.08)] py-4 lg:py-0 my-8">
         

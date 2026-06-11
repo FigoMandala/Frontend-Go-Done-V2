@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import "./index.css";
 import Login from "./components/Login.jsx";
@@ -16,6 +17,7 @@ import Account from "./components/Account.jsx";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
+    <Toaster position="top-center" toastOptions={{ style: { fontSize: "14px", borderRadius: "14px", maxWidth: "92vw" } }} />
     <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />

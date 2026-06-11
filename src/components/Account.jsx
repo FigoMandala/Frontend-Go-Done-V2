@@ -936,6 +936,7 @@ function Account() {
                 const newVal = !notifOn;
                 setNotifOn(newVal);
                 localStorage.setItem('notifEnabled', JSON.stringify(newVal));
+                window.dispatchEvent(new CustomEvent('notifEnabledChange', { detail: newVal }));
               }}
               className={`relative h-7 w-12 rounded-full transition-all duration-500 shadow-inner ${
                 notifOn ? (isDark ? 'bg-indigo-600' : 'bg-[#21569A]') : (isDark ? 'bg-zinc-700' : 'bg-slate-300')

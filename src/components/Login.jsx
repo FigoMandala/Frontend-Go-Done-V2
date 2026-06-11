@@ -2,7 +2,7 @@ import { useState } from "react";
 import backend from "../api/backend";
 import illustration from "../assets/illustration.svg";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
@@ -70,8 +70,6 @@ function Login() {
       {/* Soft Ambient Blobs Background */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[70%] rounded-full bg-blue-300/30 blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-cyan-300/30 blur-[130px] pointer-events-none"></div>
-
-      <Toaster position="top-center" />
 
       <div className="relative z-10 bg-white/60 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white/80 flex flex-col lg:flex-row items-stretch justify-between w-[90%] max-w-[1100px] min-h-[600px] overflow-hidden transition-all duration-500 hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.08)]">
         
