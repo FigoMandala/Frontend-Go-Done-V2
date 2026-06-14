@@ -8,7 +8,7 @@ import { MdOutlineMail } from "react-icons/md";
 import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
 
 const PASSWORD_RULES = [
-  { id: "length", label: "Panjang bebas", test: () => true },
+  { id: "length", test: () => true },
   { id: "letter", label: "Ada huruf", test: (value) => /[A-Za-z]/.test(value) },
   { id: "number", label: "Ada angka", test: (value) => /[0-9]/.test(value) },
   { id: "symbol", label: "Ada simbol", test: (value) => /[^A-Za-z0-9]/.test(value) },
