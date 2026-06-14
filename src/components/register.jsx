@@ -8,7 +8,7 @@ import { MdOutlineMail } from "react-icons/md";
 import { FiCheck, FiEye, FiEyeOff, FiX } from "react-icons/fi";
 
 const PASSWORD_RULES = [
-  { id: "length", test: () => true },
+  { id: "length", label: "Minimal 8 karakter", test: (value) => value.length >= 8 },
   { id: "letter", label: "Ada huruf", test: (value) => /[A-Za-z]/.test(value) },
   { id: "number", label: "Ada angka", test: (value) => /[0-9]/.test(value) },
   { id: "symbol", label: "Ada simbol", test: (value) => /[^A-Za-z0-9]/.test(value) },
@@ -96,10 +96,10 @@ function Register() {
       return;
     }
 
-    //if (!isPasswordValid) {
-      //toast.error("Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.");
-      //return;
-    //}
+    if (!isPasswordValid) {
+      toast.error("Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("Konfirmasi password tidak cocok!");
