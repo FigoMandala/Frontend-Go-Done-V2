@@ -96,10 +96,10 @@ function Register() {
       return;
     }
 
-    if (!isPasswordValid) {
-      toast.error("Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.");
-      return;
-    }
+    //if (!isPasswordValid) {
+      //toast.error("Password minimal 8 karakter dan harus berisi huruf, angka, serta simbol.");
+      //return;
+    //}
 
     if (password !== confirmPassword) {
       toast.error("Konfirmasi password tidak cocok!");
